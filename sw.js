@@ -1,10 +1,11 @@
 // Service worker: deixa o app abrir mesmo sem internet e guarda as capas dos livros.
-const CACHE = 'sc2-v7';
+const CACHE = 'sc2-v8';
 const IMG = 'sc2-covers';
-const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './sync.js'];
+const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './sync.js?v=8'];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
+  // 'reload' ignora o cache do navegador: garante que a versão nova é a que fica guardada
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS.map(u => new Request(u, {cache:'reload'})))));
   self.skipWaiting();
 });
 
@@ -30,7 +31,7 @@ self.addEventListener('fetch', e => {
 
   e.respondWith(
     caches.match(req).then(cached => {
-      const net = fetch(req).then(res => {
+      const net = fetch(req, {cache:'no-cache'}).then(res => {   // sempre confere se há versão nova no servidor
         if (res.ok) { const cp = res.clone(); caches.open(CACHE).then(c => c.put(req, cp)); }
         return res;
       }).catch(() => cached);
