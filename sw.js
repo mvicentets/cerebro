@@ -1,5 +1,5 @@
 // Service worker: deixa o app abrir mesmo sem internet e guarda as capas dos livros.
-const CACHE = 'sc2-v6';
+const CACHE = 'sc2-v7';
 const IMG = 'sc2-covers';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './sync.js'];
 

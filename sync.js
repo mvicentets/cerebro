@@ -1,5 +1,5 @@
 /* Segundo Cérebro: sincronização com Supabase
-   - login com código de 6 dígitos enviado por e-mail
+   - login com e-mail e senha
    - cada registro vira uma linha na tabela "items"; fotos e áudios vão para o bucket privado "media"
    - funciona offline: tudo continua salvo no aparelho e sincroniza quando a internet volta
 */
@@ -202,7 +202,7 @@ document.addEventListener('click', async e => {
     const pass = document.getElementById('sbPass').value || '';
     if (!/^\S+@\S+\.\S+$/.test(loginEmail)) { toast('Digite um e-mail válido'); return; }
     if (pass.length < 8) { toast('A senha precisa ter pelo menos 8 caracteres'); return; }
-    if (act === 'signup' && !confirm('Criar a conta ' + loginEmail + '? Use essa mesma conta no celular e no computador.')) return;
+    if (act === 'signup' && !(await ask('Criar a conta ' + loginEmail + '? Use essa mesma conta no celular e no computador.', 'Criar conta'))) return;
     const label = el.textContent; el.disabled = true; el.textContent = 'Conectando…';
     try { await signIn(loginEmail, pass, act === 'signup'); toast('☁️ Conectado! Sincronizando…'); render(); await syncNow(); render(); }
     catch(err) {
@@ -218,7 +218,7 @@ document.addEventListener('click', async e => {
   }
   if (act === 'now') { await syncNow(true); render(); }
   if (act === 'logout') {
-    if (!confirm('Sair da conta neste aparelho? Os dados continuam aqui e na nuvem, só param de sincronizar.')) return;
+    if (!(await ask('Sair da conta neste aparelho? Os dados continuam aqui e na nuvem, só param de sincronizar.', 'Sair', true))) return;
     try { await sbFetch('/auth/v1/logout', {method:'POST'}); } catch(err) {}
     syncLogoutLocal(); render(); toast('Desconectado');
   }

@@ -426,6 +426,18 @@ main{padding:6px 20px calc(110px + env(safe-area-inset-bottom));max-width:680px;
 @media (hover:hover){.task:hover{background:var(--hover)}.tcard .overdue .task:hover{background:transparent}}
 .dside{display:none}
 
+/* alerta de confirmação (estilo iOS) */
+.alert-ov{position:fixed;inset:0;z-index:55;background:var(--overlay);display:flex;align-items:center;justify-content:center;padding:24px;animation:fadeIn .2s}
+.alert{width:100%;max-width:300px;background:var(--glass);-webkit-backdrop-filter:saturate(180%) blur(24px);backdrop-filter:saturate(180%) blur(24px);
+  border-radius:16px;overflow:hidden;text-align:center;animation:alertIn .3s var(--spring);box-shadow:var(--shadow-lg)}
+@keyframes alertIn{from{transform:scale(1.15);opacity:0}}
+.alert p{margin:0;padding:20px 18px 16px;font-size:15px;line-height:1.4}
+.alert .ab{display:flex;border-top:1px solid var(--line)}
+.alert .ab button{flex:1;padding:12px 0;font-size:16px;color:var(--accent)}
+.alert .ab button + button{border-left:1px solid var(--line);font-weight:600}
+.alert .ab button.danger{color:var(--red-fg)}
+.alert .ab button:active{transform:none;background:var(--press)}
+
 /* indicador de sincronização */
 .sdot{position:absolute;left:16px;bottom:15px;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--faint)}
 .sdot i{width:7px;height:7px;border-radius:50%;background:var(--faint)}
@@ -537,6 +549,18 @@ const num = v => { if (v == null || v === '') return 0; let s = String(v).trim()
 const brl = n => n.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
 const dec = (n, d=1) => n.toLocaleString('pt-BR', {minimumFractionDigits:d, maximumFractionDigits:d});
 const buzz = () => navigator.vibrate && navigator.vibrate(8);
+function ask(msg, ok = 'OK', danger = false){
+  return new Promise(res => {
+    const o = document.createElement('div'); o.className = 'alert-ov';
+    o.innerHTML = `<div class="alert" role="alertdialog"><p></p><div class="ab"><button type="button">Cancelar</button><button type="button" class="${danger ? 'danger' : ''}"></button></div></div>`;
+    o.querySelector('p').textContent = msg; o.querySelectorAll('button')[1].textContent = ok;
+    const done = v => { o.remove(); res(v); };
+    o.querySelectorAll('button')[0].onclick = () => done(false);
+    o.querySelectorAll('button')[1].onclick = () => { buzz(); done(true); };
+    o.addEventListener('click', e => { if (e.target === o) done(false); });
+    document.body.appendChild(o);
+  });
+}
 function toast(msg){
   document.querySelectorAll('.toast').forEach(t => t.remove());
   const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t);
@@ -697,9 +721,9 @@ let pendingAudios = [];
 let rec = null;
 async function startRec(btn, onDone){
   if (rec) { rec.mr.stop(); return; }
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) { alert('Este navegador não permite gravar áudio aqui.'); return; }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) { toast('Este navegador não permite gravar áudio aqui.'); return; }
   let stream;
-  try { stream = await navigator.mediaDevices.getUserMedia({audio:true}); } catch(e) { alert('Permita o acesso ao microfone para gravar.'); return; }
+  try { stream = await navigator.mediaDevices.getUserMedia({audio:true}); } catch(e) { toast('Permita o acesso ao microfone para gravar.'); return; }
   const type = ['audio/mp4','audio/webm;codecs=opus','audio/webm'].find(t => MediaRecorder.isTypeSupported(t)) || '';
   const mr = new MediaRecorder(stream, type ? {mimeType:type} : undefined), chunks = [];
   const r = rec = {mr, t0:Date.now(), label:btn.innerHTML, btn};
@@ -1453,7 +1477,7 @@ function bodyForm(b){
     },
     onSubmit: fd => {
       const o = {date:fd.get('date'), weight:fd.get('weight').trim(), fat:fd.get('fat').trim(), waist:fd.get('waist').trim(), notes:fd.get('notes'), photos:readPhotos(fd)};
-      if (!num(o.weight) && !o.photos.length) { alert('Informe o peso ou adicione pelo menos uma foto.'); return false; }
+      if (!num(o.weight) && !o.photos.length) { toast('Informe o peso ou adicione pelo menos uma foto.'); return false; }
       if (isNew) db.body.push({id:uid(), ts:Date.now(), ...o}); else Object.assign(b, o);
       save({enter:true}); if (isNew) toast(num(o.weight) ? `⚖️ ${kg(o.weight)} registrado` : '📷 Fotos salvas');
     },
@@ -1517,7 +1541,7 @@ function uberCfgForm(){
       + prop('🏷️','Gasolina (R$/L)', `<input name="fuel" inputmode="decimal" required value="${esc(s.fuel)}" placeholder="ex.: 6,19">`),
     onSubmit: fd => {
       const k = fd.get('kml').trim(), f = fd.get('fuel').trim();
-      if (!num(k) || !num(f)) { alert('Preencha os dois valores com números.'); return false; }
+      if (!num(k) || !num(f)) { toast('Preencha os dois valores com números.'); return false; }
       s.kmL = k; s.fuel = f; save({enter:true});
     } });
 }
@@ -1532,7 +1556,7 @@ function reminderForm(r){
       + prop('⏰','Horário', `<input type="time" name="time" required value="${r.time}">`),
     onSubmit: fd => {
       const o = {title:fd.get('title').trim(), msg:fd.get('msg').trim(), days:fd.getAll('days').map(Number), time:fd.get('time'), on:true};
-      if (!o.title || !o.days.length) { alert('Dê um título e escolha pelo menos um dia.'); return false; }
+      if (!o.title || !o.days.length) { toast('Dê um título e escolha pelo menos um dia.'); return false; }
       let rr = r;
       if (isNew) { rr = {id:uid(), ...o}; db.reminders.push(rr); } else Object.assign(r, o);
       persist(); render();
@@ -1617,12 +1641,12 @@ function doImport(file){
     try {
       const j = JSON.parse(r.result), d = j.data || j;
       if (!Array.isArray(d.tasks) || !Array.isArray(d.workouts)) throw 0;
-      if (!confirm('Restaurar este backup? Os dados atuais deste celular serão substituídos.')) return;
+      if (!(await ask('Restaurar este backup? Os dados atuais deste aparelho serão substituídos.', 'Restaurar', true))) return;
       if (j.photos) { toast('📷 Restaurando fotos…'); for (const [id, url] of Object.entries(j.photos)) { try { await idb.put(id, await (await fetch(url)).blob()); } catch(e){} } }
       const keep = {pinHash:db.settings.pinHash, pinLen:db.settings.pinLen};
       db = {...defaults(), ...d, settings:{...defaults().settings, ...(d.settings||{}), ...keep, lastBackup:Date.now(), seeded:true}};
       save({enter:true}); toast('✅ Backup restaurado');
-    } catch(e) { alert('Esse arquivo não parece ser um backup válido do Segundo Cérebro.'); }
+    } catch(e) { toast('Esse arquivo não parece ser um backup válido do Segundo Cérebro.'); }
   };
   r.readAsText(file);
 }
@@ -1660,8 +1684,8 @@ function pinForm(){
       + prop('🔒','Repita', `<input name="p2" type="password" inputmode="numeric" pattern="\\d{4,6}" maxlength="6" required>`),
     onSubmit: fd => {
       const p1 = fd.get('p1'), p2 = fd.get('p2');
-      if (!/^\d{4,6}$/.test(p1)) { alert('O PIN deve ter de 4 a 6 números.'); return false; }
-      if (p1 !== p2) { alert('Os PINs não são iguais.'); return false; }
+      if (!/^\d{4,6}$/.test(p1)) { toast('O PIN deve ter de 4 a 6 números.'); return false; }
+      if (p1 !== p2) { toast('Os PINs não são iguais.'); return false; }
       hash(p1).then(h => { db.settings.pinHash = h; db.settings.pinLen = p1.length; save(); toast('🔒 PIN ativado'); });
     } });
 }
@@ -1738,13 +1762,13 @@ document.addEventListener('click', e => {
     case 'notesSeg': if (ui.notesSeg !== v) { ui.notesSeg = v; render({enter:true}); } break;
     case 'booksSeg': if (ui.booksSeg !== v) { ui.booksSeg = v; render({enter:true}); } break;
     case 'closeSheet': closeSheet(); break;
-    case 'sheetDelete': if (confirm('Excluir este item?')) { sheetOnDelete(); closeSheet(); } break;
+    case 'sheetDelete': ask('Excluir este item?', 'Excluir', true).then(ok => { if (ok) { sheetOnDelete(); closeSheet(); } }); break;
     case 'backup': doBackup(); break;
     case 'import': $('#importFile').click(); break;
     case 'setPin': pinForm(); break;
-    case 'removePin': if (confirm('Remover o PIN de bloqueio?')) { db.settings.pinHash = null; save(); } break;
+    case 'removePin': ask('Remover o PIN de bloqueio?', 'Remover', true).then(ok => { if (ok) { db.settings.pinHash = null; save(); } }); break;
     case 'wipe':
-      if (confirm('Apagar TODOS os dados deste celular? Isso não pode ser desfeito.') && confirm('Tem certeza mesmo? Recomendo fazer um backup antes.')) { if (window.syncLogoutLocal) syncLogoutLocal(); db = defaults(); db.settings.seeded = true; save({enter:true}); }
+      (async () => { if (await ask('Apagar TODOS os dados deste aparelho? Isso não pode ser desfeito.', 'Apagar', true) && await ask('Tem certeza mesmo? Recomendo fazer um backup antes.', 'Apagar tudo', true)) { if (window.syncLogoutLocal) syncLogoutLocal(); db = defaults(); db.settings.seeded = true; save({enter:true}); } })();
       break;
   }
 });
