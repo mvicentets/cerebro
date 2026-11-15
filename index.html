@@ -426,6 +426,16 @@ main{padding:6px 20px calc(110px + env(safe-area-inset-bottom));max-width:680px;
 @media (hover:hover){.task:hover{background:var(--hover)}.tcard .overdue .task:hover{background:transparent}}
 .dside{display:none}
 
+/* indicador de sincronização */
+.sdot{position:absolute;left:16px;bottom:15px;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--faint)}
+.sdot i{width:7px;height:7px;border-radius:50%;background:var(--faint)}
+.sdot span{display:none}
+.sdot.ok i{background:var(--green-fg)}
+.sdot.syncing i{background:var(--accent);animation:blink 1s infinite}
+.sdot.error i{background:var(--red-fg)}
+.sdot.off{display:none}
+@media (min-width:900px){.sdot span{display:inline}}
+
 /* ================= computador ================= */
 @media (min-width:900px){
   .desk-only{display:block}
@@ -482,7 +492,7 @@ main{padding:6px 20px calc(110px + env(safe-area-inset-bottom));max-width:680px;
   <div class="pad" id="lkPad"></div>
 </div>
 
-<div class="topbar" id="topbar"><span class="tt" id="tbTitle"></span>
+<div class="topbar" id="topbar"><span class="sdot off" id="syncDot"><i></i><span></span></span><span class="tt" id="tbTitle"></span>
   <button class="gear" data-act="tab" data-v="ajustes" aria-label="Ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
 </div>
 
@@ -542,7 +552,7 @@ function load(){
   try { const d = JSON.parse(localStorage.getItem(KEY)); if (d) { const b = defaults(); return {...b, ...d, settings:{...b.settings, ...(d.settings||{})}}; } } catch(e){}
   return defaults();
 }
-function persist(){ localStorage.setItem(KEY, JSON.stringify(db)); }
+function persist(){ localStorage.setItem(KEY, JSON.stringify(db)); if (window.syncSoon) syncSoon(); }
 function save(o){ persist(); render(o); }
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
 
@@ -609,7 +619,9 @@ async function compress(file, max = 1440, q = .8){
 const photoUrls = new Map();
 async function photoURL(id){
   if (photoUrls.has(id)) return photoUrls.get(id);
-  const b = await idb.get(id).catch(() => null); if (!b) return '';
+  let b = await idb.get(id).catch(() => null);
+  if (!b && window.fetchRemoteMedia) b = await fetchRemoteMedia(id);
+  if (!b) return '';
   const u = URL.createObjectURL(b); photoUrls.set(id, u); return u;
 }
 async function hydratePhotos(root = document){
@@ -1203,7 +1215,7 @@ function renderAjustes(){
   const rem = db.reminders.map(r => `<div class="row tap" data-act="editReminder" data-id="${r.id}"><span style="font-size:20px">⏰</span>
       <div style="flex:1;min-width:0"><b style="font-weight:500">${esc(r.title)}</b><div class="time">${(r.days||[]).slice().sort().map(d => WD[d]).join(', ')} às ${r.time}</div></div>
       <button class="mini" data-act="calendar" data-id="${r.id}">📅 Ativar</button></div>`).join('');
-  return `<div class="h"><h3>⏰ Lembretes</h3><button data-act="new" data-v="reminder">+ Novo</button></div>
+  return (window.syncSection ? syncSection() : '') + `<div class="h"><h3>⏰ Lembretes</h3><button data-act="new" data-v="reminder">+ Novo</button></div>
     ${rem || '<div class="empty">Nenhum lembrete.</div>'}
     <div class="callout" style="font-size:14px"><span class="ci">💡</span><div>Para o celular avisar mesmo com o app fechado, toque em <b>📅 Ativar</b> uma vez em cada lembrete. Ele vira um evento semanal com alarme no calendário do celular.</div></div>
 
@@ -1230,7 +1242,7 @@ function renderAjustes(){
     <div class="h"><h3>🗂️ Dados</h3></div>
     <p class="muted" style="font-size:14px">${db.tasks.length} tarefas · ${db.workouts.length} treinos · ${db.uber.length} dias de Uber · ${db.journal.length} no diário · ${db.notes.length} notas · ${db.books.length} livros · ${db.body.length} registros de peso · ${db.results.length} resultados · ${db.content.length} conteúdos<br>O backup inclui fotos e áudios.</p>
     <button class="btn danger block" data-act="wipe">Apagar todos os dados</button>
-    <p class="time" style="text-align:center;margin-top:20px">Segundo Cérebro · v4</p>`;
+    <p class="time" style="text-align:center;margin-top:20px">Segundo Cérebro · v5</p>`;
 }
 
 /* ================= folha inferior ================= */
@@ -1732,7 +1744,7 @@ document.addEventListener('click', e => {
     case 'setPin': pinForm(); break;
     case 'removePin': if (confirm('Remover o PIN de bloqueio?')) { db.settings.pinHash = null; save(); } break;
     case 'wipe':
-      if (confirm('Apagar TODOS os dados deste celular? Isso não pode ser desfeito.') && confirm('Tem certeza mesmo? Recomendo fazer um backup antes.')) { db = defaults(); db.settings.seeded = true; save({enter:true}); }
+      if (confirm('Apagar TODOS os dados deste celular? Isso não pode ser desfeito.') && confirm('Tem certeza mesmo? Recomendo fazer um backup antes.')) { if (window.syncLogoutLocal) syncLogoutLocal(); db = defaults(); db.settings.seeded = true; save({enter:true}); }
       break;
   }
 });
@@ -1808,7 +1820,7 @@ setInterval(() => { if (today() !== lastDay) { for (const k in ui.cal) if (ui.ca
 
 /* primeiro uso: já deixa o lembrete do jiu pronto */
 if (!db.settings.seeded) {
-  db.reminders.push({id:uid(), title:'Hoje é dia de jiu 🥋', msg:'Coloque o kimono no carro. Treino às 19h.', days:[1], time:'07:30', on:true});
+  db.reminders.push({id:'jiu-padrao', title:'Hoje é dia de jiu 🥋', msg:'Coloque o kimono no carro. Treino às 19h.', days:[1], time:'07:30', on:true});
   db.settings.seeded = true; persist();
 }
 
@@ -1817,5 +1829,6 @@ showLock();
 gcPhotos();
 if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js');
 </script>
+<script src="sync.js"></script>
 </body>
 </html>
