@@ -1,0 +1,1821 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#191919" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Cérebro">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<title>Segundo Cérebro</title>
+<style>
+/* ================= tokens (paleta do Notion) ================= */
+:root{
+  --bg:#ffffff;--bg2:#f7f7f5;--card:#ffffff;--text:#37352f;--muted:#787774;--faint:#a3a29e;
+  --line:#e9e9e7;--hover:rgba(55,53,47,.06);--press:rgba(55,53,47,.1);
+  --accent:#2383e2;--accent-soft:#e7f3f8;--danger:#eb5757;--good:#448361;
+  --shadow:0 0 0 1px rgba(15,15,15,.06),0 2px 4px rgba(15,15,15,.05);
+  --shadow-lg:0 0 0 1px rgba(15,15,15,.05),0 6px 16px rgba(15,15,15,.12);
+  --fab:#37352f;--fabtxt:#fff;--overlay:rgba(15,15,15,.4);--glass:rgba(255,255,255,.78);
+  /* tags */
+  --gray-bg:#f1f1ef;--gray-fg:#787774;--brown-bg:#f4eeee;--brown-fg:#9f6b53;--orange-bg:#fbecdd;--orange-fg:#d9730d;
+  --yellow-bg:#fbf3db;--yellow-fg:#cb912f;--green-bg:#edf3ec;--green-fg:#448361;--blue-bg:#e7f3f8;--blue-fg:#337ea9;
+  --purple-bg:#f6f3f9;--purple-fg:#9065b0;--pink-bg:#faf1f5;--pink-fg:#c14c8a;--red-bg:#fdebec;--red-fg:#d44c47;
+  --ios:cubic-bezier(.32,.72,0,1);--spring:cubic-bezier(.34,1.56,.64,1);
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#191919;--bg2:#202020;--card:#252525;--text:rgba(255,255,255,.87);--muted:#9b9b9b;--faint:#6f6f6f;
+  --line:#2f2f2f;--hover:rgba(255,255,255,.055);--press:rgba(255,255,255,.09);
+  --accent:#2f8de4;--accent-soft:#1d2f3d;--danger:#e66a6a;--good:#5aa47a;
+  --shadow:0 0 0 1px rgba(255,255,255,.07);--shadow-lg:0 0 0 1px rgba(255,255,255,.08),0 8px 24px rgba(0,0,0,.5);
+  --fab:#ebebea;--fabtxt:#191919;--overlay:rgba(0,0,0,.6);--glass:rgba(25,25,25,.78);
+  --gray-bg:#2f2f2f;--gray-fg:#9b9b9b;--brown-bg:#3a2d27;--brown-fg:#ba856f;--orange-bg:#3d2a1b;--orange-fg:#e08c4a;
+  --yellow-bg:#3b3220;--yellow-fg:#d1a54b;--green-bg:#1f3227;--green-fg:#5aa47a;--blue-bg:#1a2f3d;--blue-fg:#4f9bd0;
+  --purple-bg:#2f2538;--purple-fg:#a882c7;--pink-bg:#382430;--pink-fg:#d06aa2;--red-bg:#3d2322;--red-fg:#e06b66;
+}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--text);min-height:100dvh;overscroll-behavior-y:none;
+  font:16px/1.5 ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+input,textarea,select{font:inherit;font-size:16px;color:var(--text);background:transparent;border:0;outline:none;width:100%;border-radius:6px;padding:7px 8px}
+input::placeholder,textarea::placeholder{color:var(--faint)}
+textarea{resize:none}
+.hidden{display:none!important}
+.muted{color:var(--muted)}
+/* toque estilo iOS */
+button,.tap{transition:transform .18s var(--ios),background-color .15s,opacity .15s}
+button:active,.tap:active{transform:scale(.96)}
+.row.tap:active,.list .tap:active{transform:none;background:var(--press)}
+
+/* ================= barra superior (título compacto ao rolar) ================= */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:8;height:calc(env(safe-area-inset-top) + 46px);
+  padding:env(safe-area-inset-top) 12px 0;display:flex;align-items:center;justify-content:center;
+  border-bottom:1px solid transparent;transition:background-color .25s,border-color .25s}
+.topbar.solid{background:var(--glass);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);border-color:var(--line)}
+.topbar .tt{font-weight:600;font-size:16px;opacity:0;transform:translateY(6px);transition:opacity .25s,transform .35s var(--ios)}
+.topbar.solid .tt{opacity:1;transform:none}
+.topbar .gear{position:absolute;right:10px;bottom:5px;width:36px;height:36px;border-radius:8px;display:grid;place-items:center;color:var(--muted)}
+.topbar .gear svg{width:22px;height:22px}
+
+#app{transition:transform .5s var(--ios),filter .5s var(--ios);transform-origin:50% 0}
+body.sheet-open #app{transform:scale(.94);filter:brightness(.92)}
+.pagehead{padding:calc(env(safe-area-inset-top) + 52px) 20px 6px;max-width:680px;margin:0 auto}
+.pagehead .icon{font-size:44px;line-height:1;display:inline-block;margin-bottom:6px;animation:iconPop .6s var(--spring) both}
+.pagehead h1{margin:0;font-size:32px;line-height:1.15;font-weight:700;letter-spacing:-.01em}
+.pagehead .sub{color:var(--muted);font-size:14px;margin-top:2px}
+.pagehead .sub::first-letter{text-transform:uppercase}
+main{padding:6px 20px calc(110px + env(safe-area-inset-bottom));max-width:680px;margin:0 auto}
+@keyframes iconPop{from{transform:scale(.4) rotate(-12deg);opacity:0}}
+
+/* ================= navegação inferior (vidro) ================= */
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:9;display:flex;padding:4px 6px env(safe-area-inset-bottom);
+  background:var(--glass);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);border-top:1px solid var(--line)}
+.nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 0 4px;font-size:10.5px;color:var(--faint);font-weight:500}
+.nav button svg{width:24px;height:24px;transition:transform .4s var(--spring)}
+.nav button.on{color:var(--text)}
+.nav button.on svg{transform:scale(1.08)}
+.fab{position:fixed;right:18px;bottom:calc(74px + env(safe-area-inset-bottom));z-index:9;width:54px;height:54px;border-radius:50%;
+  background:var(--fab);color:var(--fabtxt);box-shadow:var(--shadow-lg);display:grid;place-items:center;
+  transition:transform .4s var(--spring),opacity .25s}
+.fab svg{width:24px;height:24px}
+.fab.hide{transform:scale(0);opacity:0;pointer-events:none}
+
+/* ================= blocos estilo Notion ================= */
+.seg{position:relative;display:flex;background:var(--hover);border-radius:9px;padding:3px;margin:6px 0 14px}
+.seg .thumb{position:absolute;top:3px;bottom:3px;left:3px;width:calc((100% - 6px)/var(--n));border-radius:7px;background:var(--card);
+  box-shadow:0 1px 3px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.04);transition:transform .45s var(--ios)}
+.seg button{position:relative;flex:1;padding:6px 0;font-size:14px;color:var(--muted);font-weight:500}
+.seg button.on{color:var(--text);font-weight:600}
+.seg button:active{transform:none}
+
+.navrow{display:flex;align-items:center;gap:6px;margin-bottom:10px}
+.navrow .arr{width:34px;height:34px;border-radius:8px;color:var(--muted);font-size:20px;display:grid;place-items:center}
+.navrow .arr:active{background:var(--hover)}
+.navrow .lbl{flex:1}
+.navrow .lbl b{display:block;font-size:20px;font-weight:700}
+.navrow .lbl b::first-letter,.navrow .lbl span::first-letter{text-transform:uppercase}
+.navrow .lbl span{display:block;font-size:13px;color:var(--muted)}
+.pill{font-size:12px;padding:3px 9px;border-radius:99px;background:var(--hover);color:var(--muted);font-weight:500}
+
+.h{display:flex;align-items:center;justify-content:space-between;margin:22px 0 4px;padding-bottom:4px;border-bottom:1px solid var(--line)}
+.h h3{margin:0;font-size:15px;font-weight:600;display:flex;gap:8px;align-items:center}
+.h h3 .n{color:var(--faint);font-weight:400;font-size:14px}
+.h button{font-size:14px;color:var(--muted);padding:2px 6px;border-radius:5px}
+.h button:active{background:var(--hover)}
+
+.row{display:flex;align-items:center;gap:10px;padding:7px 4px;border-radius:6px;min-height:40px}
+.empty{color:var(--faint);font-size:14px;padding:10px 4px}
+.callout{display:flex;gap:10px;align-items:flex-start;background:var(--gray-bg);border-radius:8px;padding:12px 14px;margin:8px 0;font-size:15px}
+.callout .ci{font-size:20px;line-height:1.3}
+.callout.yellow{background:var(--yellow-bg)}.callout.blue{background:var(--blue-bg)}.callout.green{background:var(--green-bg)}.callout.red{background:var(--red-bg)}
+.callout .btn{margin-top:8px}
+.card{background:var(--card);border-radius:10px;box-shadow:var(--shadow);padding:12px 14px;margin-bottom:8px}
+
+.tag{display:inline-flex;align-items:center;gap:4px;padding:1px 7px;border-radius:4px;font-size:13px;line-height:20px;white-space:nowrap;
+  background:var(--gray-bg);color:var(--text)}
+.tg-gray{background:var(--gray-bg)}.tg-brown{background:var(--brown-bg)}.tg-orange{background:var(--orange-bg)}.tg-yellow{background:var(--yellow-bg)}
+.tg-green{background:var(--green-bg)}.tg-blue{background:var(--blue-bg)}.tg-purple{background:var(--purple-bg)}.tg-pink{background:var(--pink-bg)}.tg-red{background:var(--red-bg)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 14px;border-radius:8px;background:var(--accent);color:#fff;font-weight:500;font-size:15px}
+.btn.ghost{background:var(--hover);color:var(--text)}
+.btn.danger{background:transparent;color:var(--danger)}
+.btn.block{width:100%;margin-top:8px}
+.btn.sm{padding:5px 10px;font-size:13px}
+
+.chips{display:flex;gap:6px;overflow-x:auto;margin:4px -20px 10px;padding:0 20px 2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{white-space:nowrap;padding:4px 10px;border-radius:99px;font-size:14px;color:var(--muted);box-shadow:inset 0 0 0 1px var(--line)}
+.chip.on{background:var(--text);color:var(--bg);box-shadow:none}
+
+/* tarefas (to-do do Notion) */
+.task{display:flex;align-items:flex-start;gap:10px;padding:6px 4px;border-radius:6px}
+.chk{width:18px;height:18px;margin-top:3px;flex-shrink:0;border-radius:4px;box-shadow:inset 0 0 0 1.5px var(--muted);display:grid;place-items:center;
+  transition:background-color .2s,box-shadow .2s,transform .2s var(--ios)}
+.chk svg{width:12px;height:12px;stroke:#fff;stroke-width:3;fill:none;stroke-dasharray:20;stroke-dashoffset:20;transition:stroke-dashoffset .3s .05s var(--ios)}
+.task.done .chk{background:var(--accent);box-shadow:none}
+.task.done .chk svg{stroke-dashoffset:0}
+.chk.pop{animation:pop .45s var(--spring)}
+@keyframes pop{0%{transform:scale(.7)}60%{transform:scale(1.18)}100%{transform:scale(1)}}
+.task .tt{flex:1;min-width:0;position:relative}
+.task .tt .txt{background:linear-gradient(currentColor,currentColor) no-repeat 0 55%/0 1px;transition:background-size .35s var(--ios),color .25s}
+.task.done .tt .txt{color:var(--faint);background-size:100% 1px}
+.task .sub{display:block;font-size:12px;color:var(--red-fg)}
+.flag{color:var(--red-fg);font-weight:700;margin-left:4px}
+.mini{font-size:13px;padding:2px 8px;border-radius:5px;background:var(--hover);color:var(--muted);font-weight:500;white-space:nowrap}
+.quick{display:flex;gap:10px;align-items:center;padding:4px 4px}
+.quick .plus{width:18px;height:18px;color:var(--faint);font-size:20px;line-height:18px;text-align:center;flex-shrink:0}
+.quick input{padding:5px 0}
+
+/* treinos */
+.wo{display:flex;gap:12px;align-items:flex-start}
+.wo .ic{font-size:22px;line-height:1.3}
+.wo .top{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.wo .meta{font-size:13px;color:var(--muted);margin-top:2px}
+.wo p{margin:4px 0 0;font-size:14px;white-space:pre-wrap;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.time{font-size:12px;color:var(--faint)}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;margin:8px 0}
+.stat{border-radius:10px;padding:10px 12px;box-shadow:var(--shadow);background:var(--card)}
+.stat b{display:block;font-size:20px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--muted)}
+.stats.two{grid-template-columns:1fr 1fr}
+.stat b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar{height:6px;border-radius:99px;background:var(--hover);overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;background:var(--c,var(--accent));border-radius:99px;transform-origin:left;animation:growX .8s var(--ios) both}
+@keyframes growX{from{transform:scaleX(0)}}
+.brow{display:flex;align-items:center;gap:10px;padding:5px 0;font-size:14px}
+.brow .bar{flex:1;margin:0}
+
+/* diário / notas */
+.jr{display:flex;gap:12px}
+.jr .mood{font-size:24px;line-height:1.2}
+.jr p,.note p{margin:2px 0 0;white-space:pre-wrap;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;font-size:15px}
+.note b{display:block;font-weight:600}
+
+/* livros: galeria do Notion */
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-top:4px}
+.gcard{background:var(--card);border-radius:10px;box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;position:relative}
+.gcover{position:relative;aspect-ratio:2/2.6;background:var(--c);display:flex;align-items:flex-end;padding:10px;overflow:hidden}
+.gcover .ph{font-weight:700;font-size:15px;line-height:1.2;color:var(--text);opacity:.75}
+.gcover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;animation:fadeIn .5s}
+.gbody{padding:8px 10px 10px}
+.gbody b{display:block;font-size:14px;font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.gbody .a{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gcard .mini{position:absolute;top:8px;right:8px;background:var(--glass);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:var(--text)}
+.stars{color:#e6a23c;font-size:12px;letter-spacing:1px}
+.bk{display:flex;gap:12px;align-items:center}
+.bk .cv{width:40px;height:58px;border-radius:4px;flex-shrink:0;background:var(--c);overflow:hidden;position:relative;box-shadow:var(--shadow)}
+.bk .cv img{width:100%;height:100%;object-fit:cover}
+.bk .info{flex:1;min-width:0}
+.bk .info b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;font-size:15px}
+@keyframes fadeIn{from{opacity:0}}
+
+/* semana */
+.wk{display:flex;align-items:center;gap:12px;padding:9px 4px;border-bottom:1px solid var(--line)}
+.wk:last-child{border-bottom:0}
+.wk .dd{width:40px;text-align:center}
+.wk .dd small{display:block;font-size:11px;color:var(--faint);text-transform:uppercase}
+.wk .dd b{font-size:19px;font-weight:600}
+.wk.today .dd b{color:#fff;background:var(--red-fg);border-radius:50%;width:32px;height:32px;display:inline-grid;place-items:center;font-size:16px}
+.wk .mid{flex:1;font-size:13px;color:var(--muted)}
+.wk .icons{font-size:17px;letter-spacing:2px}
+.wk .md{font-size:20px;width:26px;text-align:center}
+
+/* mês */
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px}
+.cal .wh{text-align:center;font-size:11px;color:var(--faint);text-transform:uppercase;padding:4px 0}
+.cal .c{min-width:0;aspect-ratio:1/1.2;border-radius:8px;padding:4px 1px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:14px;border-top:1px solid var(--line)}
+.cal .c .num{width:24px;height:24px;display:grid;place-items:center;border-radius:50%}
+.cal .c.today .num{background:var(--red-fg);color:#fff;font-weight:600}
+.cal .c .dots{display:flex;gap:2px;flex-wrap:wrap;justify-content:center}
+.cal .c .dots i{width:6px;height:6px;border-radius:50%;background:var(--c)}
+.cal .c .em{font-size:11px;line-height:1}
+.cal .c .tk{width:12px;height:3px;border-radius:2px;background:var(--faint);opacity:.6}
+.cal .c .tk.ok{background:var(--accent);opacity:1}
+
+/* uber */
+.hero{border-radius:12px;padding:16px;background:var(--card);box-shadow:var(--shadow);margin-bottom:8px}
+.hero small{color:var(--muted);font-size:13px}
+.hero .big{font-size:36px;font-weight:700;letter-spacing:-.02em;line-height:1.15;font-variant-numeric:tabular-nums}
+.hero .big.neg{color:var(--red-fg)}
+.kv{display:flex;justify-content:space-between;padding:6px 0;font-size:15px;border-bottom:1px solid var(--line)}
+.kv:last-child{border-bottom:0}
+.kv span{color:var(--muted)}
+.kv b{font-weight:600;font-variant-numeric:tabular-nums}
+.chart{display:flex;align-items:flex-end;gap:3px;height:130px;padding:8px 0 0;margin-top:4px}
+.chart .col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px;min-width:0}
+.chart .col i{width:100%;max-width:28px;border-radius:4px 4px 2px 2px;background:var(--green-fg);transform-origin:bottom;animation:growY .7s var(--ios) both;min-height:2px}
+.chart .col i.neg{background:var(--red-fg)}
+.chart .col i.zero{background:var(--line)}
+.chart .col span{font-size:10px;color:var(--faint);height:14px}
+@keyframes growY{from{transform:scaleY(0)}}
+.prev{font-size:14px;margin:4px 0 10px;padding:10px 12px;border-radius:8px;background:var(--hover)}
+
+/* entrada animada (estilo iOS) */
+.enter > *, .enter #carousel > *{animation:rise .55s var(--ios) both}
+.enter > *:nth-child(2),.enter #carousel > *:nth-child(2){animation-delay:.03s}
+.enter > *:nth-child(3),.enter #carousel > *:nth-child(3){animation-delay:.06s}
+.enter > *:nth-child(4),.enter #carousel > *:nth-child(4){animation-delay:.09s}
+.enter > *:nth-child(5),.enter #carousel > *:nth-child(5){animation-delay:.12s}
+.enter > *:nth-child(6),.enter #carousel > *:nth-child(6){animation-delay:.15s}
+.enter > *:nth-child(7),.enter #carousel > *:nth-child(7){animation-delay:.18s}
+.enter > *:nth-child(n+8),.enter #carousel > *:nth-child(n+8){animation-delay:.21s}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}}
+#carousel{touch-action:pan-y;will-change:transform}
+.slide-l{animation:slideL .45s var(--ios) both}.slide-r{animation:slideR .45s var(--ios) both}
+@keyframes slideL{from{transform:translateX(70px);opacity:0}}
+@keyframes slideR{from{transform:translateX(-70px);opacity:0}}
+
+/* ================= folha inferior (modal iOS) ================= */
+.ov{position:fixed;inset:0;z-index:20;background:var(--overlay);display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .35s}
+.ov.out{opacity:0;transition:opacity .3s}
+.sheet{background:var(--bg);width:100%;max-width:680px;max-height:93dvh;overflow-y:auto;border-radius:14px 14px 0 0;
+  padding:0 20px calc(24px + env(safe-area-inset-bottom));animation:sheetUp .5s var(--ios) both;overscroll-behavior:contain}
+.ov.out .sheet{transform:translateY(100%);transition:transform .32s var(--ios)}
+@keyframes sheetUp{from{transform:translateY(100%)}}
+.sh-head{position:sticky;top:0;background:var(--bg);display:flex;align-items:center;justify-content:space-between;padding:8px 0 8px;z-index:2;touch-action:none}
+.sh-head::before{content:"";position:absolute;top:5px;left:50%;width:36px;height:5px;margin-left:-18px;border-radius:3px;background:var(--line)}
+.sh-head b{font-size:15px;font-weight:600;padding-top:8px}
+.sh-head button{color:var(--muted);font-size:15px;min-width:70px;text-align:left;padding:14px 0 6px}
+.sh-head .save{color:var(--accent);font-weight:600;text-align:right}
+.ptitle{font-size:26px;font-weight:700;padding:6px 0;line-height:1.25}
+.prop{display:grid;grid-template-columns:130px minmax(0,1fr);gap:4px;align-items:start;min-height:38px}
+.prop > label{color:var(--muted);font-size:14px;display:flex;gap:8px;align-items:center;padding:8px 0;white-space:nowrap}
+.prop > label .pi{width:18px;text-align:center;opacity:.8}
+.prop input:hover,.prop input:focus,.prop textarea:focus,.prop select:focus{background:var(--hover)}
+.prop .opts{padding:6px 0}
+.pbody{border-top:1px solid var(--line);margin-top:10px;padding-top:6px}
+.pbody textarea{padding:8px 0;min-height:130px;line-height:1.55}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opts label{margin:0;cursor:pointer}
+.opts input{display:none}
+.opts span{display:inline-block;padding:2px 8px;border-radius:4px;font-size:14px;background:var(--gray-bg);opacity:.55;transition:opacity .2s,box-shadow .2s,transform .3s var(--spring)}
+.opts input:checked+span{opacity:1;box-shadow:inset 0 0 0 1.5px var(--text);transform:scale(1.04)}
+.opts.moods{justify-content:center}
+.opts.moods span{font-size:28px;padding:2px 6px;background:transparent;opacity:.35;filter:grayscale(.6)}
+.opts.moods input:checked+span{opacity:1;filter:none;box-shadow:none;transform:scale(1.2)}
+.opts.rate span{font-size:20px;background:transparent;color:#e6a23c;padding:0 4px}
+.opts.rate input:checked+span{box-shadow:none;background:var(--yellow-bg)}
+.menu .row{padding:10px 6px;gap:14px}
+.menu .row .mi{font-size:22px;width:30px;text-align:center}
+.menu .row b{display:block;font-weight:500}
+.menu .row small{color:var(--muted);font-size:13px}
+.covers{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0}
+.covers button{display:flex;flex-direction:column;gap:4px;text-align:left;font-size:11px;color:var(--muted)}
+.covers img{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:4px;box-shadow:var(--shadow);background:var(--hover)}
+.covers span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.25}
+.cvprev{display:flex;gap:12px;align-items:center}
+.cvprev img{width:54px;height:78px;object-fit:cover;border-radius:4px;box-shadow:var(--shadow)}
+
+/* ================= aviso estilo "ilha dinâmica" ================= */
+.toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 8px);z-index:40;transform:translateX(-50%);
+  background:#000;color:#fff;padding:10px 18px;border-radius:99px;font-size:14px;font-weight:500;white-space:nowrap;
+  animation:island .6s var(--spring) both;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.toast.out{transition:transform .35s var(--ios),opacity .35s;transform:translateX(-50%) translateY(-30px) scale(.7);opacity:0}
+@keyframes island{from{transform:translateX(-50%) translateY(-30px) scale(.5);opacity:0}}
+
+/* ================= bloqueio ================= */
+.lock{position:fixed;inset:0;z-index:60;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:20px;transition:opacity .4s,transform .5s var(--ios)}
+.lock.unlock{opacity:0;transform:scale(1.08);pointer-events:none}
+.lock .logo{width:64px;height:64px;border-radius:16px;box-shadow:var(--shadow)}
+.lock h2{margin:10px 0 0;font-size:20px}
+.lock p{margin:0;color:var(--muted)}
+.dots2{display:flex;gap:16px;margin:22px 0}
+.dots2 i{width:13px;height:13px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--muted);transition:background-color .15s,transform .25s var(--spring)}
+.dots2 i.f{background:var(--text);box-shadow:none;transform:scale(1.1)}
+.dots2.err{animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-10px)}40%,80%{transform:translateX(10px)}}
+.pad{display:grid;grid-template-columns:repeat(3,74px);gap:16px}
+.pad button{height:74px;border-radius:50%;background:var(--hover);font-size:28px;font-weight:400}
+.pad button:active{background:var(--press)}
+.pad button.x{background:none;font-size:20px;color:var(--muted)}
+
+/* ================= fotos / evolução ================= */
+.photos{display:flex;gap:6px;overflow-x:auto;margin-top:8px;scrollbar-width:none}
+.photos::-webkit-scrollbar{display:none}
+.ph-t{position:relative;width:72px;height:72px;flex-shrink:0;border-radius:8px;overflow:hidden;background:var(--hover)}
+.ph-t img{width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .3s}
+.ph-t img.ok{opacity:1}
+.ph-t .x{position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;font-size:12px;line-height:22px;text-align:center}
+.ph-add{position:relative;width:72px;height:72px;flex-shrink:0;border-radius:8px;box-shadow:inset 0 0 0 1.5px var(--line);display:grid;place-items:center;align-content:center;color:var(--muted);font-size:12px;text-align:center;line-height:1.3;cursor:pointer}
+.ph-add b{font-size:22px;font-weight:400;display:block}
+.sr{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.lb{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,0);display:flex;align-items:center;justify-content:center;transition:background-color .35s;touch-action:none}
+.lb.on{background:rgba(0,0,0,.95)}
+.lb img{max-width:100%;max-height:100%;object-fit:contain;transition:transform .45s var(--ios),opacity .3s;will-change:transform}
+.lb .cnt{position:absolute;top:calc(env(safe-area-inset-top) + 16px);left:0;right:0;text-align:center;color:#fff;font-size:14px;opacity:.8}
+.lb .cls{position:absolute;top:calc(env(safe-area-inset-top) + 8px);right:12px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.18);color:#fff;font-size:16px}
+.wchart{width:100%;height:auto;display:block;margin-top:4px;overflow:visible}
+.wchart .ln{fill:none;stroke:var(--accent);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;animation:draw 1.1s var(--ios) forwards}
+.wchart .ar{opacity:0;animation:appear .8s .5s forwards}
+.wchart .dt{fill:var(--card);stroke:var(--accent);stroke-width:2;opacity:0;animation:appear .3s .9s forwards}
+.wchart .gl{stroke:var(--line);stroke-width:1;stroke-dasharray:3 4}
+.wchart text{font-size:10px;fill:var(--faint);font-family:inherit}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes appear{to{opacity:1}}
+.rng{display:flex;gap:4px;justify-content:flex-end}
+.rng button{font-size:12px;padding:2px 8px;border-radius:5px;color:var(--muted)}
+.rng button.on{background:var(--hover);color:var(--text);font-weight:600}
+.ba{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.ba figure{margin:0;position:relative;border-radius:10px;overflow:hidden;aspect-ratio:3/4;background:var(--hover);cursor:pointer}
+.ba img{width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .4s}
+.ba img.ok{opacity:1}
+.ba figcaption{position:absolute;left:0;right:0;bottom:0;padding:22px 10px 8px;background:linear-gradient(transparent,rgba(0,0,0,.65));color:#fff;font-size:12px}
+.ba figcaption b{display:block;font-size:15px}
+.res .big{font-size:24px;font-weight:700;letter-spacing:-.01em;margin-top:2px}
+.pr{font-size:11px;font-weight:700;color:#fff;background:linear-gradient(135deg,#f5b400,#e07b00);padding:1px 8px;border-radius:99px}
+/* ================= painel inicial ================= */
+.cd{display:flex;gap:16px;align-items:center;border-radius:14px;padding:16px 18px;background:var(--text);color:var(--bg);margin:6px 0 10px}
+.cdn{text-align:center;min-width:76px}
+.cdn b{display:block;font-size:48px;line-height:1;font-weight:800;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.cdn span{font-size:11px;opacity:.7;text-transform:uppercase;letter-spacing:.1em}
+.cdi{flex:1;min-width:0}
+.cdt{font-weight:600;font-size:15px}
+.cdc{font-variant-numeric:tabular-nums;font-size:13px;opacity:.75;margin-top:1px}
+.cd .bar{background:rgba(127,127,127,.35);margin-top:8px}
+.cd .bar i{background:var(--bg)}
+.cdp{font-size:12px;opacity:.75;margin-top:6px}
+.dashc .dh{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.dashc .dh b{font-weight:600}
+.dashc .dh button{font-size:13px;color:var(--muted)}
+.sqs{display:grid;grid-template-columns:repeat(11,minmax(0,1fr));gap:4px;margin:10px 0 8px}
+.sq{aspect-ratio:1;border-radius:5px;background:var(--hover);font-size:9px;color:var(--faint);display:grid;place-items:center;padding:0;min-width:0}
+.sq.l1{background:color-mix(in srgb,var(--c) 28%,var(--hover))}
+.sq.l2{background:color-mix(in srgb,var(--c) 52%,var(--hover))}
+.sq.l3{background:color-mix(in srgb,var(--c) 76%,var(--hover))}
+.sq.l4{background:var(--c);color:#fff;font-weight:700}
+.sq.l2,.sq.l3{color:#fff}
+.sq.fut{background:transparent;box-shadow:inset 0 0 0 1px var(--line)}
+.sq.now{box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px var(--text)}
+.sqs.dias,.wrow{--c:var(--green-fg)}
+.sqs.conteudo{--c:var(--pink-fg)}
+.enter .sq{animation:sqIn .5s var(--spring) both;animation-delay:calc(var(--i,0) * 14ms + .1s)}
+@keyframes sqIn{from{transform:scale(.3);opacity:0}}
+.dfoot{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.legend{display:flex;gap:3px;align-items:center}
+.legend .sq{width:10px;height:10px;border-radius:3px;animation:none!important}
+.wrow{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin:10px 0 6px}
+.wrow > div{display:flex;flex-direction:column;align-items:center;gap:3px}
+.wrow .wd{font-size:11px;color:var(--faint);text-transform:uppercase}
+.wrow .sq{width:100%;font-size:11px}
+.wrow .ic{font-size:13px;min-height:18px;line-height:1.3;text-align:center}
+.trend{font-size:14px;margin:8px 0 2px}
+.desk-only,.brand{display:none}
+
+/* ================= conteúdo ================= */
+.cmp textarea{padding:4px 0;min-height:52px;font-size:16px}
+.cmpbar{display:flex;justify-content:space-between;gap:8px;margin-top:6px}
+.aud{display:flex;align-items:center;gap:10px;padding:5px 10px 5px 5px;margin-top:6px;border-radius:99px;background:var(--hover)}
+.aud .play{width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;flex-shrink:0;display:grid;place-items:center}
+.aud .wave{flex:1;height:18px;position:relative;background:repeating-linear-gradient(90deg,var(--faint) 0 2px,transparent 2px 5px);border-radius:2px;
+  -webkit-mask:linear-gradient(180deg,transparent 15%,#000 15%,#000 85%,transparent 85%);mask:linear-gradient(180deg,transparent 15%,#000 15%,#000 85%,transparent 85%)}
+.aud .wave i{position:absolute;left:0;top:0;bottom:0;width:0;background:repeating-linear-gradient(90deg,var(--accent) 0 2px,transparent 2px 5px);transition:width .2s linear}
+.aud .x2{font-size:12px;color:var(--muted);padding:4px}
+.recording{background:var(--red-bg)!important;color:var(--red-fg)!important}
+.recdot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--red-fg);animation:blink 1s infinite;margin-right:4px}
+@keyframes blink{50%{opacity:.2}}
+
+/* ================= card de tarefas ================= */
+@property --p{syntax:'<number>';inherits:false;initial-value:0}
+.tcard{background:var(--card);border-radius:12px;box-shadow:var(--shadow);padding:14px 14px 8px;margin:12px 0 6px}
+.tcard .th{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}
+.tcard .th h3{margin:0;font-size:17px;font-weight:700}
+.tcard .th .time{font-size:13px;color:var(--muted)}
+.ring{--p:0;width:46px;height:46px;flex-shrink:0;border-radius:50%;display:grid;place-items:center;position:relative;
+  background:conic-gradient(var(--green-fg) calc(var(--p) * 1%),var(--hover) 0)}
+.ring::before{content:"";position:absolute;inset:5px;border-radius:50%;background:var(--card)}
+.ring span{position:relative;font-size:11px;font-weight:700;font-variant-numeric:tabular-nums}
+.enter .ring{animation:ringIn 1.1s var(--ios) both .15s}
+@keyframes ringIn{from{--p:0}}
+.tcard .task{padding:9px 6px;border-radius:8px;border-bottom:1px solid var(--line)}
+.tcard .task:last-of-type{border-bottom:0}
+.tcard .tsub{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--red-fg);padding:8px 6px 2px}
+.tcard .tsub.n{color:var(--faint)}
+.tcard .overdue{border-left:3px solid var(--red-fg);background:color-mix(in srgb,var(--red-bg) 45%,transparent);border-radius:4px 10px 10px 4px;padding:2px 4px;margin:4px 0 8px}
+.tcard .overdue .task{border-bottom-color:transparent}
+.tcard .quick{margin:6px 0 4px;padding:8px 10px;border-radius:8px;background:var(--hover)}
+.tcard .empty{padding:6px 6px}
+@media (hover:hover){.task:hover{background:var(--hover)}.tcard .overdue .task:hover{background:transparent}}
+.dside{display:none}
+
+/* ================= computador ================= */
+@media (min-width:900px){
+  .desk-only{display:block}
+  .nav{top:0;bottom:0;right:auto;width:232px;flex-direction:column;justify-content:flex-start;padding:14px 10px;gap:2px;border-top:0;border-right:1px solid var(--line);
+    background:var(--bg2);-webkit-backdrop-filter:none;backdrop-filter:none}
+  .brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px;padding:6px 10px 16px}
+  .nav button{flex:none;flex-direction:row;gap:10px;padding:7px 10px;font-size:14px;border-radius:6px;color:var(--muted)}
+  .nav button svg{width:18px;height:18px}
+  .nav button.on{background:var(--hover);color:var(--text)}
+  .nav button.on svg,.nav button:active{transform:none}
+  .topbar{left:232px}
+  #app{margin-left:232px}
+  .pagehead,main{max-width:1180px;padding-left:48px;padding-right:48px}
+  main{padding-bottom:80px}
+  .fab{bottom:28px;right:28px}
+  .pagehead,main{max-width:1320px}
+  .dtop{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:8px}
+  .dtop > *{margin:0!important}
+  .dtop .cd{grid-column:1/-1}
+  .dside{display:block}
+  .dmain{margin-top:16px}
+  .dgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 28px;align-items:start}
+  .tcard{padding:18px 20px 12px;margin-top:14px}
+  .tcard .th h3{font-size:19px}
+  .tcard .task{font-size:16px;padding:10px 8px}
+  .ring{width:54px;height:54px}
+  .ring::before{inset:6px}
+  .ring span{font-size:12px}
+  .ov{align-items:center}
+  .sheet{border-radius:14px;max-height:88vh;padding-bottom:24px}
+  .toast{top:16px}
+  .chips{margin-left:0;margin-right:0;padding:0}
+}
+@media (min-width:1180px){
+  .dtop{grid-template-columns:1.15fr 1fr 1fr}
+  .dtop .cd{grid-column:auto;flex-direction:column;align-items:stretch;justify-content:space-between;gap:10px}
+  .dtop .cd .cdn{display:flex;align-items:baseline;gap:8px;text-align:left}
+  .dtop .cd .cdn b{font-size:64px}
+  .dtop .cd .cdn span{font-size:13px}
+  .dmain{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:32px;align-items:start}
+  .dside{position:sticky;top:62px}
+  .dside .dashc{margin:0}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+
+<div id="lock" class="lock hidden">
+  <img class="logo" src="icon-192.png" alt="">
+  <h2>Segundo Cérebro</h2>
+  <p id="lkMsg">Digite seu PIN</p>
+  <div class="dots2" id="lkDots"></div>
+  <div class="pad" id="lkPad"></div>
+</div>
+
+<div class="topbar" id="topbar"><span class="tt" id="tbTitle"></span>
+  <button class="gear" data-act="tab" data-v="ajustes" aria-label="Ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+</div>
+
+<div id="app">
+  <header class="pagehead"><span class="icon" id="phIcon">☀️</span><h1 id="title">Meu dia</h1><div class="sub" id="hsub"></div></header>
+  <main id="view"></main>
+</div>
+
+<button class="fab" id="fab" data-act="addMenu" aria-label="Adicionar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+
+<nav class="nav">
+  <div class="brand">🧠 Segundo Cérebro</div>
+  <button data-act="tab" data-v="hoje"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.5h17M8 2.5v4M16 2.5v4"/></svg>Hoje</button>
+  <button data-act="tab" data-v="treinos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg>Treinos</button>
+  <button data-act="tab" data-v="conteudo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3.5"/><path d="M10.2 9.3v5.4l4.6-2.7z"/></svg>Conteúdo</button>
+  <button data-act="tab" data-v="uber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 16.5V12l1.8-4.6A2 2 0 0 1 8.7 6h6.6a2 2 0 0 1 1.9 1.4L19 12v4.5"/><rect x="3.5" y="12" width="17" height="5" rx="1.5"/><path d="M6 17v2M18 17v2"/></svg>Uber</button>
+  <button data-act="tab" data-v="notas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 3.5H7a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14.5 3.5V8H19M8.5 12.5h7M8.5 16h4.5"/></svg>Notas</button>
+  <button data-act="tab" data-v="livros"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/></svg>Livros</button>
+</nav>
+
+<script>
+/* ================= utilidades ================= */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const pad = n => String(n).padStart(2, '0');
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parse = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
+const addDays = (s, n) => { const d = parse(s); d.setDate(d.getDate()+n); return ymd(d); };
+const today = () => ymd(new Date());
+const WD = ['dom','seg','ter','qua','qui','sex','sáb'];
+const WDL = ['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
+const MO = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+const diffDays = (a, b) => Math.round((parse(a) - parse(b)) / 864e5);
+const fmtShort = s => { const d = parse(s); return `${d.getDate()} ${MO[d.getMonth()].slice(0,3)}`; };
+const fmtLong = s => { const d = parse(s); return `${WDL[d.getDay()]}, ${d.getDate()} de ${MO[d.getMonth()]}`; };
+function dayName(s){ const k = diffDays(s, today()); return k===0?'hoje':k===-1?'ontem':k===1?'amanhã':WDL[parse(s).getDay()]; }
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+const weekStart = s => addDays(s, -((parse(s).getDay()+6)%7));
+const hm = ts => { const d = new Date(ts); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+const num = v => { if (v == null || v === '') return 0; let s = String(v).trim(); if (s.includes(',')) s = s.replace(/\./g,'').replace(',','.'); const n = parseFloat(s); return isNaN(n) ? 0 : n; };
+const brl = n => n.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+const dec = (n, d=1) => n.toLocaleString('pt-BR', {minimumFractionDigits:d, maximumFractionDigits:d});
+const buzz = () => navigator.vibrate && navigator.vibrate(8);
+function toast(msg){
+  document.querySelectorAll('.toast').forEach(t => t.remove());
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t);
+  setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 400); }, 2000);
+}
+
+/* ================= dados ================= */
+const KEY = 'segundo-cerebro-v1';
+const defaults = () => ({ tasks:[], workouts:[], journal:[], notes:[], books:[], uber:[], reminders:[], body:[], results:[], content:[], contentLog:{},
+  settings:{ pinHash:null, pinLen:4, lastBackup:null, createdAt:Date.now(), kmL:'', fuel:'', seeded:false } });
+let db = load();
+function load(){
+  try { const d = JSON.parse(localStorage.getItem(KEY)); if (d) { const b = defaults(); return {...b, ...d, settings:{...b.settings, ...(d.settings||{})}}; } } catch(e){}
+  return defaults();
+}
+function persist(){ localStorage.setItem(KEY, JSON.stringify(db)); }
+function save(o){ persist(); render(o); }
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
+
+const WT = {
+  jiujitsu:{l:'Jiu-jitsu', i:'🥋', t:'blue'},
+  hyrox:   {l:'Hyrox',     i:'🔥', t:'orange'},
+  academia:{l:'Academia',  i:'🏋️', t:'purple'},
+  corrida: {l:'Corrida',   i:'🏃', t:'green'},
+  outro:   {l:'Outro',     i:'💪', t:'gray'},
+};
+const WF = {
+  jiujitsu:[['mod','Modalidade','🥋','select',['Kimono','No-gi','Open mat','Competição']],['rolas','Rolas','🔁','number'],['tec','Técnicas','📝','textarea','Ex.: passagem de guarda, raspagem de gancho']],
+  hyrox:[['formato','Formato','🧩','text','Simulado, estações…'],['tempo','Tempo total','⏱️','text','mm:ss'],['est','Estações','📝','textarea','SkiErg 1000m, Sled push…']],
+  academia:[['grupo','Treino','🎯','text','Peito e tríceps'],['ex','Exercícios','📝','textarea','Supino 4x10 60kg']],
+  corrida:[['km','Distância','📏','decimal','km'],['tempo','Tempo','⏱️','text','mm:ss']],
+  outro:[['nome','Atividade','🏷️','text','Natação, bike…']],
+};
+const MOODS = [{v:1,e:'😞'},{v:2,e:'😕'},{v:3,e:'😐'},{v:4,e:'🙂'},{v:5,e:'😄'}];
+const moodE = v => (MOODS.find(m => m.v == v) || {}).e || '';
+const BOOKST = {lendo:'Lendo', quero:'Quero ler', lido:'Lidos'};
+const COVER_COLORS = ['blue','green','orange','purple','pink','yellow','brown','red'];
+const coverColor = t => `var(--${COVER_COLORS[[...t].reduce((a,c)=>a+c.charCodeAt(0),0) % COVER_COLORS.length]}-bg)`;
+
+function secs(t){ if(!t) return 0; const p = String(t).split(':').map(Number); if (p.some(isNaN)) return 0; return p.reduce((a,b)=>a*60+b, 0); }
+function pace(km, t){ const s = secs(t), k = num(km); if(!s||!k) return ''; const p = Math.round(s/k); return `${Math.floor(p/60)}:${pad(p%60)}`; }
+function woMeta(w){
+  const f = w.f || {}, p = [];
+  if (w.dur) p.push(w.dur + ' min');
+  if (w.type==='jiujitsu'){ if(f.mod) p.push(f.mod); if(f.rolas) p.push(f.rolas+' rolas'); }
+  if (w.type==='hyrox'){ if(f.formato) p.push(f.formato); if(f.tempo) p.push(f.tempo); }
+  if (w.type==='academia' && f.grupo) p.push(f.grupo);
+  if (w.type==='corrida'){ if(f.km) p.push(f.km+' km'); if(f.tempo) p.push(f.tempo); const pc = pace(f.km,f.tempo); if(pc) p.push(pc+'/km'); }
+  if (w.type==='outro' && f.nome) p.push(f.nome);
+  if (w.int) p.push('intensidade '+w.int+'/5');
+  return p.join(' · ');
+}
+const woText = w => { const f = w.f||{}; return [f.tec, f.est, f.ex, w.notes].filter(Boolean).join('\n'); };
+const dayMood = d => { const j = db.journal.filter(x => x.date===d && x.mood).sort((a,b)=>a.ts-b.ts); return j.length ? j[j.length-1].mood : null; };
+const tagsOf = t => [...new Set((t.match(/#[\p{L}\d_-]+/gu) || []).map(x => x.toLowerCase()))];
+
+/* uber: lucro = ganho − (km ÷ km/l × preço do litro) − outros gastos */
+function hours(v){ if(!v) return 0; const s = String(v); if (s.includes(':')) { const [h,m] = s.split(':').map(Number); return (h||0) + (m||0)/60; } return num(s); }
+function uCalc(e){
+  const km = num(e.km), kml = num(e.kml) || num(db.settings.kmL), preco = num(e.fuel) || num(db.settings.fuel);
+  const litros = kml ? km / kml : 0, comb = litros * preco, outros = num(e.other), ganho = num(e.gain);
+  return {km, ganho, litros, comb, outros, lucro: ganho - comb - outros, horas: hours(e.hours), corridas: +e.trips || 0};
+}
+/* fotos: comprimidas e guardadas no IndexedDB do celular (cabe muito mais que o localStorage) */
+const idb = (() => {
+  let p;
+  const open = () => p || (p = new Promise((res, rej) => { const r = indexedDB.open('segundo-cerebro', 1); r.onupgradeneeded = () => r.result.createObjectStore('photos'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }));
+  const tx = async (mode, fn) => { const d = await open(); return new Promise((res, rej) => { const t = d.transaction('photos', mode), rq = fn(t.objectStore('photos')); t.oncomplete = () => res(rq.result); t.onerror = () => rej(t.error); }); };
+  return { put:(k, v) => tx('readwrite', s => s.put(v, k)), get:k => tx('readonly', s => s.get(k)), del:k => tx('readwrite', s => s.delete(k)), keys:() => tx('readonly', s => s.getAllKeys()) };
+})();
+async function compress(file, max = 1440, q = .8){
+  let src, w, h;
+  try { src = await createImageBitmap(file); w = src.width; h = src.height; }
+  catch(e) { const img = new Image(); img.src = URL.createObjectURL(file); await img.decode(); src = img; w = img.naturalWidth; h = img.naturalHeight; }
+  const k = Math.min(1, max / Math.max(w, h)), c = document.createElement('canvas');
+  c.width = Math.round(w * k); c.height = Math.round(h * k);
+  c.getContext('2d').drawImage(src, 0, 0, c.width, c.height);
+  return new Promise(r => c.toBlob(r, 'image/jpeg', q));
+}
+const photoUrls = new Map();
+async function photoURL(id){
+  if (photoUrls.has(id)) return photoUrls.get(id);
+  const b = await idb.get(id).catch(() => null); if (!b) return '';
+  const u = URL.createObjectURL(b); photoUrls.set(id, u); return u;
+}
+async function hydratePhotos(root = document){
+  for (const img of root.querySelectorAll('img[data-photo]:not([src])')) {
+    const u = await photoURL(img.dataset.photo);
+    if (u) { img.onload = () => img.classList.add('ok'); img.src = u; }
+  }
+}
+const allPhotoIds = () => [...db.workouts, ...db.body, ...db.results].flatMap(x => x.photos || []).concat(db.content.flatMap(c => (c.audios || []).map(a => a.id)));
+async function gcPhotos(){ try { const used = new Set(allPhotoIds()); for (const k of await idb.keys()) if (!used.has(k)) await idb.del(k); } catch(e){} }
+const blobToDataURL = b => new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(b); });
+const photoStrip = ids => ids && ids.length ? `<div class="photos" data-ids="${ids.join(',')}">${ids.map((id,i) => `<button type="button" class="ph-t" data-act="viewPhoto" data-i="${i}"><img data-photo="${id}" alt=""></button>`).join('')}</div>` : '';
+const phEdit = id => `<div class="ph-t" data-pid="${id}"><img data-photo="${id}" alt=""><button type="button" class="x" data-act="rmPhoto" aria-label="Remover">✕</button></div>`;
+const photoField = ids => `<div class="h" style="margin-top:14px"><h3>📷 Fotos</h3></div><div class="photos" id="phField">${ids.map(phEdit).join('')}<label class="ph-add tap"><span><b>＋</b>Foto</span><input type="file" accept="image/*" multiple class="sr" id="phInput"></label></div><input type="hidden" name="photos" value="${ids.join(',')}">`;
+const readPhotos = fd => String(fd.get('photos') || '').split(',').filter(Boolean);
+function syncPhotoField(){ const f = $('#shForm'); if (f && f.elements.namedItem('photos')) f.elements.namedItem('photos').value = [...document.querySelectorAll('#phField [data-pid]')].map(x => x.dataset.pid).join(','); }
+
+/* visualizador de fotos: abre "crescendo" a partir da miniatura, desliza entre fotos, arraste para baixo fecha */
+async function openLightbox(ids, i, fromEl){
+  const lb = document.createElement('div'); lb.className = 'lb';
+  lb.innerHTML = `<img alt=""><div class="cnt"></div><button class="cls" aria-label="Fechar">✕</button>`;
+  document.body.appendChild(lb);
+  const img = lb.querySelector('img'), cnt = lb.querySelector('.cnt');
+  const show = async k => { i = (k + ids.length) % ids.length; img.src = await photoURL(ids[i]); cnt.textContent = ids.length > 1 ? `${i+1} de ${ids.length}` : ''; };
+  await show(i); await img.decode().catch(() => {});
+  if (fromEl) {
+    const r = fromEl.getBoundingClientRect(), f = img.getBoundingClientRect(), k = Math.max(r.width / f.width, r.height / f.height);
+    img.style.transition = 'none';
+    img.style.transform = `translate(${r.left + r.width/2 - (f.left + f.width/2)}px, ${r.top + r.height/2 - (f.top + f.height/2)}px) scale(${k})`;
+    void img.offsetWidth; img.style.transition = '';
+  }
+  requestAnimationFrame(() => { lb.classList.add('on'); img.style.transform = ''; });
+  const close = () => { lb.classList.remove('on'); img.style.transform = 'scale(.85)'; img.style.opacity = '0'; setTimeout(() => lb.remove(), 350); };
+  lb.querySelector('.cls').addEventListener('click', e => { e.stopPropagation(); close(); });
+  let x0 = 0, y0 = 0, moved = false;
+  lb.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; moved = false; }, {passive:true});
+  lb.addEventListener('touchmove', e => {
+    const dx = e.touches[0].clientX - x0, dy = e.touches[0].clientY - y0; moved = true;
+    img.style.transition = 'none';
+    if (dy > 0 && dy > Math.abs(dx)) { img.style.transform = `translateY(${dy}px) scale(${1 - dy/1500})`; lb.style.backgroundColor = `rgba(0,0,0,${.95 - dy/600})`; }
+    else img.style.transform = `translateX(${dx}px)`;
+  }, {passive:true});
+  lb.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
+    img.style.transition = ''; lb.style.backgroundColor = '';
+    if (dy > 110 && dy > Math.abs(dx)) close();
+    else { img.style.transform = ''; if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) && ids.length > 1) { buzz(); show(i + (dx < 0 ? 1 : -1)); } }
+  });
+  lb.addEventListener('click', e => { if (!moved && e.target !== lb.querySelector('.cls')) close(); moved = false; });
+}
+
+const uSum = list => list.reduce((a, e) => { const c = uCalc(e); for (const k in c) a[k] += c[k]; return a; }, {km:0,ganho:0,litros:0,comb:0,outros:0,lucro:0,horas:0,corridas:0});
+
+/* ================= pontuação dos dias ================= */
+// dia completo = tarefas concluídas (50%) + treino feito (50%)
+function dayScore(d){
+  const t = db.tasks.filter(x => x.date === d), tp = t.length ? t.filter(x => x.done).length / t.length : 0;
+  return (tp + (db.workouts.some(x => x.date === d) ? 1 : 0)) / 2;
+}
+// conteúdo: postou = 100%, trabalhou em conteúdo (ideia, roteiro, áudio) = 50%
+const contentScore = d => db.content.some(c => c.status === 'postado' && c.posted === d) ? 1 : (db.contentLog[d] ? .5 : 0);
+const sqLevel = s => s >= 1 ? 'l4' : s > .66 ? 'l3' : s > .33 ? 'l2' : s > 0 ? 'l1' : 'l0';
+
+/* ================= conteúdo ================= */
+const ST = { ideia:{l:'Ideia',i:'💡',t:'gray'}, roteiro:{l:'Roteiro',i:'✍️',t:'yellow'}, gravado:{l:'Gravado',i:'🎥',t:'orange'},
+  editado:{l:'Editado',i:'✂️',t:'purple'}, agendado:{l:'Agendado',i:'📅',t:'blue'}, postado:{l:'Postado',i:'✅',t:'green'} };
+const ST_ORDER = Object.keys(ST);
+const PL = { instagram:'📸 Instagram', tiktok:'🎵 TikTok', youtube:'▶️ YouTube', linkedin:'💼 LinkedIn' };
+const fmtDur = sec => { sec = Math.max(0, Math.round(sec || 0)); return `${Math.floor(sec/60)}:${pad(sec%60)}`; };
+let pendingAudios = [];
+
+/* gravação de áudio */
+let rec = null;
+async function startRec(btn, onDone){
+  if (rec) { rec.mr.stop(); return; }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) { alert('Este navegador não permite gravar áudio aqui.'); return; }
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({audio:true}); } catch(e) { alert('Permita o acesso ao microfone para gravar.'); return; }
+  const type = ['audio/mp4','audio/webm;codecs=opus','audio/webm'].find(t => MediaRecorder.isTypeSupported(t)) || '';
+  const mr = new MediaRecorder(stream, type ? {mimeType:type} : undefined), chunks = [];
+  const r = rec = {mr, t0:Date.now(), label:btn.innerHTML, btn};
+  mr.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+  mr.onstop = async () => {
+    stream.getTracks().forEach(t => t.stop()); clearInterval(r.timer);
+    r.btn.classList.remove('recording'); r.btn.innerHTML = r.label; rec = null;
+    const blob = new Blob(chunks, {type: mr.mimeType || type || 'audio/mp4'});
+    if (blob.size < 800) return;
+    const a = {id:'a' + uid(), dur:(Date.now() - r.t0) / 1000};
+    await idb.put(a.id, blob); buzz(); onDone(a);
+  };
+  mr.start(250); btn.classList.add('recording'); buzz();
+  const tick = () => { btn.innerHTML = `<i class="recdot"></i>${fmtDur((Date.now() - r.t0) / 1000)} · parar`; };
+  tick(); r.timer = setInterval(tick, 250);
+}
+const audioRow = (a, scope) => `<div class="aud" data-aid="${a.id}" data-dur="${a.dur||0}"><button type="button" class="play" data-act="playAudio" data-id="${a.id}" aria-label="Tocar">▶</button><div class="wave"><i></i></div><span class="time">${fmtDur(a.dur)}</span>${scope?`<button type="button" class="x2" data-act="rmAudio" data-scope="${scope}" data-id="${a.id}" aria-label="Remover">✕</button>`:''}</div>`;
+let player = null;
+async function playAudio(id, btn){
+  if (player && player.id === id) { if (player.audio.paused) { player.audio.play(); btn.textContent = '❚❚'; } else { player.audio.pause(); btn.textContent = '▶'; } return; }
+  if (player) { player.audio.pause(); player.btn.textContent = '▶'; player.bar.style.width = '0'; }
+  const url = await photoURL(id); if (!url) { toast('Áudio não encontrado'); return; }
+  const row = btn.closest('.aud'), bar = row.querySelector('.wave i'), dur = +row.dataset.dur || 0, audio = new Audio(url);
+  player = {audio, id, btn, bar};
+  audio.ontimeupdate = () => { const D = isFinite(audio.duration) && audio.duration ? audio.duration : dur; if (D) bar.style.width = Math.min(100, audio.currentTime / D * 100) + '%'; };
+  audio.onended = () => { btn.textContent = '▶'; bar.style.width = '0'; player = null; };
+  audio.play().then(() => btn.textContent = '❚❚').catch(() => toast('Não consegui tocar esse áudio'));
+}
+function syncAudField(){ const f = $('#shForm'); if (f && f.elements.namedItem('audios')) f.elements.namedItem('audios').value = JSON.stringify([...document.querySelectorAll('#audField .aud')].map(x => ({id:x.dataset.aid, dur:+x.dataset.dur}))); }
+const words = t => (t || '').trim() ? t.trim().split(/\s+/).length : 0;
+
+/* ================= estado ================= */
+const ui = { tab:'hoje', cal:{ hoje:{mode:'dia', cursor:today()}, uber:{mode:'semana', cursor:today()} },
+  notesSeg:'ideias', booksSeg:'lendo', wFilter:'todos', q:'', pop:null, trSeg:'treinos', bodyRange:'90', ctSeg:'ideias' };
+const PAGES = { hoje:['☀️','Meu dia'], treinos:['🥋','Treinos'], uber:['🚗','Uber'], conteudo:['🎬','Conteúdo'], notas:['💡','Notas'], livros:['📚','Livros'], ajustes:['⚙️','Ajustes'] };
+const C = () => ui.cal[ui.tab] || ui.cal.hoje;
+
+/* controle segmentado com "pílula" deslizante */
+const segLast = {}; let pendingThumbs = [];
+function seg(key, items, cur, act){
+  const idx = Math.max(0, items.findIndex(i => i[0] === cur)), from = segLast[key] ?? idx;
+  segLast[key] = idx; if (from !== idx) pendingThumbs.push([key, idx]);
+  return `<div class="seg" data-seg="${key}" style="--n:${items.length}"><i class="thumb" style="transform:translateX(${from*100}%)"></i>${items.map(([v,l]) => `<button data-act="${act}" data-v="${v}" class="${v===cur?'on':''}">${l}</button>`).join('')}</div>`;
+}
+function countUps(){
+  document.querySelectorAll('[data-count]').forEach(el => {
+    const to = +el.dataset.count, f = el.dataset.fmt === 'brl' ? brl : el.dataset.fmt === 'dec' ? (n => dec(n)) : (n => Math.round(n));
+    const t0 = performance.now(), D = 750;
+    const tick = t => { const p = Math.min(1, (t - t0) / D), e = 1 - Math.pow(1 - p, 3); el.textContent = f(to * e); if (p < 1) requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+  });
+}
+
+function render(o = {}){
+  const v = $('#view');
+  v.innerHTML = ({hoje:renderHome, treinos:renderTreinos, uber:renderUber, conteudo:renderConteudo, notas:renderNotas, livros:renderLivros, ajustes:renderAjustes})[ui.tab]();
+  const [icon, title] = PAGES[ui.tab];
+  if ($('#phIcon').textContent !== icon) { const i = $('#phIcon'); i.textContent = icon; i.style.animation = 'none'; void i.offsetWidth; i.style.animation = ''; }
+  $('#title').textContent = title; $('#tbTitle').textContent = title;
+  $('#hsub').textContent = ui.tab === 'hoje' ? fmtLong(today()) : '';
+  document.querySelectorAll('.nav button').forEach(b => b.classList.toggle('on', b.dataset.v === ui.tab));
+  $('#fab').classList.toggle('hide', ui.tab === 'ajustes');
+  v.classList.remove('enter');
+  if (o.enter) { void v.offsetWidth; v.classList.add('enter'); }
+  if (o.slide) { const c = $('#carousel'); if (c) c.classList.add('slide-' + o.slide); }
+  if (o.enter || o.slide) countUps();
+  const moves = pendingThumbs; pendingThumbs = [];
+  requestAnimationFrame(() => requestAnimationFrame(() => moves.forEach(([k,i]) => { const t = document.querySelector(`[data-seg="${k}"] .thumb`); if (t) t.style.transform = `translateX(${i*100}%)`; })));
+  ui.pop = null;
+  hydratePhotos(v);
+}
+
+/* ================= peças reutilizáveis ================= */
+function navRow(label, sub, isCurrent){
+  return `<div class="navrow"><div class="lbl"><b>${label}</b><span>${sub}</span></div>
+    ${isCurrent ? '' : '<button class="pill" data-act="goToday">Hoje</button>'}
+    <button class="arr" data-act="prev" aria-label="Anterior">‹</button><button class="arr" data-act="next" aria-label="Próximo">›</button></div>`;
+}
+const CHECK = '<svg viewBox="0 0 12 12"><path d="M2.5 6.2l2.3 2.3 4.7-5"/></svg>';
+function taskRow(t, overdue){
+  return `<div class="task ${t.done?'done':''}"><button class="chk ${ui.pop===t.id?'pop':''}" data-act="toggleTask" data-id="${t.id}" aria-label="Concluir">${CHECK}</button>
+    <div class="tt" data-act="editTask" data-id="${t.id}"><span class="txt">${esc(t.title)}</span>${t.important?'<span class="flag">!</span>':''}
+    ${overdue?`<span class="sub">${dayName(t.date)} · ${fmtShort(t.date)}</span>`:''}</div>
+    ${overdue?`<button class="mini" data-act="moveToday" data-id="${t.id}">→ hoje</button>`:''}</div>`;
+}
+const wTag = type => { const t = WT[type] || WT.outro; return `<span class="tag tg-${t.t}">${t.i} ${t.l}</span>`; };
+function woCard(w, showDate){
+  const txt = woText(w);
+  return `<div class="card wo tap" data-act="editWorkout" data-id="${w.id}"><div style="flex:1;min-width:0">
+    <div class="top">${wTag(w.type)}${showDate?`<span class="time">${dayName(w.date)}, ${fmtShort(w.date)}</span>`:''}</div>
+    <div class="meta">${esc(woMeta(w))}</div>${txt?`<p>${esc(txt)}</p>`:''}${photoStrip(w.photos)}</div></div>`;
+}
+function jrCard(j, showDate){
+  return `<div class="card jr tap" data-act="editJournal" data-id="${j.id}"><div class="mood">${moodE(j.mood)||'📝'}</div>
+    <div style="flex:1;min-width:0"><div class="time">${showDate?`${dayName(j.date)}, ${fmtShort(j.date)} · `:''}${hm(j.ts)}</div><p>${esc(j.text)}</p></div></div>`;
+}
+const coverImg = b => b.cover ? `<img src="${esc(b.cover)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : '';
+function bookRow(b){
+  const prog = b.pages ? Math.min(100, Math.round((b.cur||0) / b.pages * 100)) : 0;
+  return `<div class="card bk tap" data-act="editBook" data-id="${b.id}"><div class="cv" style="--c:${coverColor(b.title)}">${coverImg(b)}</div>
+    <div class="info"><b>${esc(b.title)}</b><div class="time">${b.pages?`pág. ${b.cur||0} de ${b.pages} · ${prog}%`:esc(b.author||'')}</div>
+    ${b.pages?`<div class="bar"><i style="width:${prog}%"></i></div>`:''}</div>
+    <button class="mini" data-act="bookPage" data-id="${b.id}">página</button></div>`;
+}
+function bookCard(b){
+  const prog = b.pages ? Math.min(100, Math.round((b.cur||0) / b.pages * 100)) : 0;
+  return `<div class="gcard tap" data-act="editBook" data-id="${b.id}">
+    <div class="gcover" style="--c:${coverColor(b.title)}"><span class="ph">${esc(b.title)}</span>${coverImg(b)}</div>
+    <div class="gbody"><b>${esc(b.title)}</b><div class="a">${esc(b.author||'—')}</div>
+    ${b.status==='lendo'&&b.pages?`<div class="bar"><i style="width:${prog}%"></i></div><div class="time">${prog}% · pág. ${b.cur||0}/${b.pages}</div>`:''}
+    ${b.status==='lido'?`<div class="time">${b.rating?`<span class="stars">${'★'.repeat(b.rating)}</span> · `:''}${b.done?fmtShort(b.done)+' '+String(parse(b.done).getFullYear()).slice(2):''}</div>`:''}</div>
+    ${b.status==='lendo'?`<button class="mini" data-act="bookPage" data-id="${b.id}">página</button>`:''}</div>`;
+}
+function uberRow(e){
+  const c = uCalc(e);
+  return `<div class="card tap" data-act="editUber" data-id="${e.id}" style="display:flex;align-items:center;gap:12px">
+    <span style="font-size:22px">🚗</span><div style="flex:1;min-width:0"><b style="font-weight:600">${cap(dayName(e.date))}, ${fmtShort(e.date)}</b>
+    <div class="time">${brl(c.ganho)} ganhos · ${dec(c.km,0)} km · ${brl(c.comb)} gasolina</div></div>
+    <b style="color:${c.lucro<0?'var(--red-fg)':'var(--green-fg)'};font-variant-numeric:tabular-nums">${brl(c.lucro)}</b></div>`;
+}
+const remToday = d => db.reminders.filter(r => r.on !== false && (r.days||[]).includes(parse(d).getDay()));
+
+/* ================= HOJE ================= */
+function backupBanner(){
+  const has = db.tasks.length+db.workouts.length+db.journal.length+db.notes.length+db.books.length+db.uber.length+db.body.length+db.results.length;
+  if (!has) return '';
+  const ref = db.settings.lastBackup || db.settings.createdAt, d = Math.floor((Date.now() - ref) / 864e5);
+  if (d < 7) return '';
+  return `<div class="callout yellow"><span class="ci">💾</span><div>${db.settings.lastBackup ? `Faz ${d} dias desde o último backup.` : 'Você ainda não fez nenhum backup.'}<br>
+    <button class="btn sm" data-act="backup">Fazer backup agora</button></div></div>`;
+}
+function renderHome(){
+  const c = C();
+  const day = seg('home', [['dia','Dia'],['semana','Semana'],['mes','Mês']], c.mode, 'mode')
+    + `<div id="carousel">${({dia:renderDay, semana:renderWeek, mes:renderMonth})[c.mode]()}</div>`;
+  return backupBanner() + `<div class="home"><div class="dtop">${countdownCard()}${gridCard('dias')}${gridCard('conteudo')}</div>`
+    + `<div class="dmain"><div class="daycol">${day}</div><aside class="dside">${weekCard()}</aside></div></div>`;
+}
+
+/* contagem regressiva até 31/12 */
+function cdParts(){
+  const now = new Date(), y = now.getFullYear(), end = new Date(y, 11, 31, 23, 59, 59), ms = Math.max(0, end - now);
+  const start = new Date(y, 0, 1), pct = Math.min(100, (now - start) / (new Date(y + 1, 0, 1) - start) * 100);
+  return { y, days: Math.floor(ms / 864e5), h: Math.floor(ms / 36e5) % 24, m: Math.floor(ms / 6e4) % 60, s: Math.floor(ms / 1e3) % 60, pct };
+}
+const cdClock = () => { const c = cdParts(); return `${pad(c.h)}h ${pad(c.m)}m ${pad(c.s)}s · ${(c.days/7).toFixed(1).replace('.',',')} semanas`; };
+function countdownCard(){
+  const c = cdParts();
+  const msg = c.days === 0 ? 'É hoje. Feche o ano com tudo.' : c.days <= 7 ? 'Última semana. Sem desculpas.' : 'Cada dia conta. Não procrastine.';
+  return `<div class="cd"><div class="cdn"><b data-count="${c.days}">${c.days}</b><span>dia${c.days===1?'':'s'}</span></div>
+    <div class="cdi"><div class="cdt">até 31 de dezembro</div><div class="cdc" id="cdClock">${cdClock()}</div>
+    <div class="bar"><i style="width:${c.pct.toFixed(1)}%"></i></div><div class="cdp">${Math.floor(c.pct)}% de ${c.y} já passou · ${msg}</div></div></div>`;
+}
+
+/* 31 quadradinhos do mês */
+function gridCard(kind){
+  const t0 = today(), p = parse(t0), y = p.getFullYear(), m = p.getMonth(), n = new Date(y, m + 1, 0).getDate(), pre = `${y}-${pad(m+1)}-`;
+  const fn = kind === 'dias' ? dayScore : contentScore;
+  let sq = '', full = 0;
+  for (let i = 1; i <= n; i++) {
+    const d = pre + pad(i), fut = d > t0, sc = fut ? 0 : fn(d);
+    if (sc >= 1) full++;
+    const act = kind === 'dias' ? `data-act="goDay" data-d="${d}"` : `data-act="tab" data-v="conteudo"`;
+    sq += `<button class="sq ${fut ? 'fut' : sqLevel(sc)} ${d === t0 ? 'now' : ''}" style="--i:${i}" ${act} aria-label="${fmtShort(d)}: ${Math.round(sc*100)}%">${i}</button>`;
+  }
+  let streak = 0, d = t0; if (fn(d) < (kind === 'dias' ? 1 : .5)) d = addDays(d, -1);
+  while (streak < 400 && fn(d) >= (kind === 'dias' ? 1 : .5)) { streak++; d = addDays(d, -1); }
+  const title = kind === 'dias' ? '✅ Dias completos' : '🎬 Conteúdo';
+  const right = kind === 'dias' || ui.tab === 'conteudo' ? `<span class="time">${full}/${p.getDate()} dias</span>` : `<button data-act="tab" data-v="conteudo">Abrir →</button>`;
+  const hint = kind === 'dias' ? 'tarefas feitas + treino = 100%' : 'postou = 100% · produziu = 50%';
+  const legend = `<span class="legend">${['l0','l1','l2','l3','l4'].map(l => `<i class="sq ${l}"></i>`).join('')}</span>`;
+  return `<div class="card dashc"><div class="dh"><b>${title} <span class="time">· ${MO[m]}</span></b>${right}</div>
+    <div class="sqs ${kind}">${sq}</div>
+    <div class="dfoot"><span>${streak ? `🔥 ${streak} dia${streak>1?'s':''} seguido${streak>1?'s':''}` : hint}</span><span class="sqs ${kind}" style="margin:0;display:flex">${legend}</span></div></div>`;
+}
+
+/* resumo da semana (aparece no computador) */
+function weekCard(){
+  const t0 = today(), ws = weekStart(t0), days = [...Array(7)].map((_, i) => addDays(ws, i)), we = days[6];
+  const inR = (a, b) => x => x.date >= a && x.date <= b;
+  const wk = db.workouts.filter(inR(ws, we)), lw = db.workouts.filter(inR(addDays(ws, -7), addDays(ws, -1)));
+  const min = wk.reduce((a, w) => a + (+w.dur || 0), 0), ints = wk.filter(w => w.int), avg = ints.length ? ints.reduce((a, w) => a + w.int, 0) / ints.length : 0;
+  const tk = db.tasks.filter(inR(ws, we)), posted = db.content.filter(c => c.status === 'postado' && c.posted >= ws && c.posted <= we).length;
+  const diff = wk.length - lw.length;
+  const trend = !wk.length && !lw.length ? '🏁 Nenhum treino ainda. Bora começar?' : diff > 0 ? `📈 ${diff} treino${diff>1?'s':''} a mais que a semana passada` : diff < 0 ? `📉 ${-diff} a menos que a semana passada (${lw.length})` : `➖ Mesmo ritmo da semana passada (${lw.length})`;
+  const last = db.workouts.slice().sort((a, b) => a.date < b.date ? 1 : a.date > b.date ? -1 : b.ts - a.ts)[0];
+  const types = Object.entries(WT).map(([k, t]) => { const q = wk.filter(w => w.type === k).length; return q ? `<span class="tag tg-${t.t}">${t.i} ${t.l} · ${q}</span>` : ''; }).join(' ');
+  const wts = db.body.filter(b => num(b.weight)).sort(byDateAsc), lastW = wts[wts.length - 1], prevW = wts.filter(b => b.date <= addDays(t0, -7)).pop();
+  const rs = db.results.filter(inR(ws, we));
+  return `<div class="card dashc"><div class="dh"><b>📅 Sua semana</b><span class="time">${fmtShort(ws)} – ${fmtShort(we)}</span></div>
+    <div class="wrow">${days.map(d => { const fut = d > t0, w = db.workouts.filter(x => x.date === d);
+      return `<div><span class="wd">${WD[parse(d).getDay()]}</span><button class="sq ${fut ? 'fut' : sqLevel(dayScore(d))} ${d === t0 ? 'now' : ''}" data-act="goDay" data-d="${d}">${parse(d).getDate()}</button><span class="ic">${w.map(x => (WT[x.type]||WT.outro).i).join('')}</span></div>`; }).join('')}</div>
+    <div class="trend">${trend}</div>
+    ${types ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0">${types}</div>` : ''}
+    <div class="kv"><span>Treinos</span><b>${wk.length} · ${Math.floor(min/60)}h${pad(min%60)}</b></div>
+    ${avg ? `<div class="kv"><span>Intensidade média</span><b>${dec(avg)}/5</b></div>` : ''}
+    ${last ? `<div class="kv"><span>Último treino</span><b>${(WT[last.type]||WT.outro).i} ${dayName(last.date)}</b></div>` : ''}
+    ${lastW ? `<div class="kv"><span>Peso</span><b>${kg(lastW.weight)}${prevW ? ` (${signKg(num(lastW.weight) - num(prevW.weight))} em 7d)` : ''}</b></div>` : ''}
+    ${rs.length ? `<div class="kv"><span>Resultados</span><b>${rs.length}${rs.some(r => r.pr) ? ' · 🏅 recorde!' : ''}</b></div>` : ''}
+    <div class="kv"><span>Tarefas</span><b>${tk.filter(t => t.done).length}/${tk.length}</b></div>
+    <div class="kv"><span>Conteúdos postados</span><b>${posted}</b></div></div>`;
+}
+function renderDay(){
+  const d = C().cursor, isToday = d === today(), dn = dayName(d);
+  const tasks = db.tasks.filter(t => t.date === d).sort((a,b) => a.done - b.done || b.important - a.important || a.ts - b.ts);
+  const overdue = isToday ? db.tasks.filter(t => !t.done && t.date < d).sort((a,b) => a.date < b.date ? -1 : 1) : [];
+  const wos = db.workouts.filter(w => w.date === d), jr = db.journal.filter(j => j.date === d).sort((a,b) => a.ts - b.ts);
+  const lendo = db.books.filter(b => b.status === 'lendo'), ub = db.uber.filter(e => e.date === d), rem = remToday(d);
+  const done = tasks.filter(t => t.done).length;
+  const near = ['hoje','ontem','amanhã'].includes(dn);
+  let h = navRow(dn, near ? fmtLong(d) : `${parse(d).getDate()} de ${MO[parse(d).getMonth()]} de ${parse(d).getFullYear()}`, isToday);
+  if (rem.length) h += rem.map(r => `<div class="callout blue tap" data-act="editReminder" data-id="${r.id}"><span class="ci">⏰</span><div><b>${esc(r.title)}</b> <span class="muted">· ${r.time}</span>${r.msg?`<br><span class="muted">${esc(r.msg)}</span>`:''}</div></div>`).join('');
+  const pct = tasks.length ? Math.round(done / tasks.length * 100) : 0;
+  const status = !tasks.length ? (isToday ? 'Nada planejado ainda. O que precisa sair hoje?' : 'Nenhuma tarefa nesse dia')
+    : done === tasks.length ? 'Tudo feito! 🎉' : `${done} de ${tasks.length} concluída${done === 1 ? '' : 's'}`;
+  h += `<section class="tcard"><div class="th"><div><h3>✅ Tarefas${isToday ? ' de hoje' : ''}</h3><span class="time">${status}</span></div>
+      <div class="ring" style="--p:${pct}"><span>${pct}%</span></div></div>
+    ${overdue.length ? `<div class="tsub">⚠️ Atrasadas · ${overdue.length}</div><div class="overdue">${overdue.map(t => taskRow(t, true)).join('')}</div>${tasks.length ? '<div class="tsub n">Hoje</div>' : ''}` : ''}
+    ${tasks.map(t => taskRow(t)).join('')}
+    <form class="quick" data-form="quickTask"><span class="plus">+</span><input name="title" placeholder="Adicionar tarefa…" autocomplete="off" enterkeyhint="done"></form></section>
+    <div class="dgrid">`;
+  h += `<div><div class="h"><h3>🏋️ Treinos</h3><button data-act="new" data-v="workout">+ Registrar</button></div>${wos.length ? wos.map(w => woCard(w)).join('') : `<div class="empty">Nenhum treino registrado.</div>`}</div>`;
+  h += `<div><div class="h"><h3>📔 Diário</h3><button data-act="new" data-v="journal">+ Escrever</button></div>${jr.length ? jr.map(j => jrCard(j)).join('') : `<button class="empty" style="width:100%;text-align:left" data-act="new" data-v="journal">Como você está se sentindo ${isToday?'hoje':'nesse dia'}?</button>`}</div>`;
+  const bd = db.body.filter(x => x.date === d), rs = db.results.filter(x => x.date === d);
+  if (bd.length || rs.length) h += `<div><div class="h"><h3>🏆 Evolução</h3></div>${bd.map(bodyCard).join('')}${rs.map(resultCard).join('')}</div>`;
+  const ctd = db.content.filter(c => c.posted === d);
+  if (ctd.length) h += `<div><div class="h"><h3>🎬 Conteúdo postado</h3></div>${ctd.map(contentCard).join('')}</div>`;
+  if (ub.length) h += `<div><div class="h"><h3>🚗 Uber</h3></div>${ub.map(uberRow).join('')}</div>`;
+  if (isToday && lendo.length) h += `<div><div class="h"><h3>📖 Lendo agora</h3></div>${lendo.map(bookRow).join('')}</div>`;
+  return h + '</div>';
+}
+function renderWeek(){
+  const ws = weekStart(C().cursor), days = [...Array(7)].map((_,i) => addDays(ws, i)), we = days[6];
+  const inW = x => x.date >= ws && x.date <= we, wk = db.workouts.filter(inW), tk = db.tasks.filter(inW);
+  const cur = today() >= ws && today() <= we;
+  let h = navRow(cur ? 'Esta semana' : `Semana de ${fmtShort(ws)}`, `${fmtShort(ws)} – ${fmtShort(we)}`, cur);
+  h += `<div class="stats"><div class="stat"><b data-count="${wk.length}">${wk.length}</b><span>treinos</span></div>
+    <div class="stat"><b>${tk.filter(t=>t.done).length}/${tk.length}</b><span>tarefas</span></div>
+    <div class="stat"><b>${new Set(db.journal.filter(inW).map(j=>j.date)).size}/7</b><span>dias no diário</span></div></div>`;
+  h += `<div>` + days.map(d => {
+    const t = db.tasks.filter(x => x.date === d), w = db.workouts.filter(x => x.date === d), m = dayMood(d), pd = parse(d);
+    return `<div class="wk tap ${d===today()?'today':''}" data-act="goDay" data-d="${d}"><div class="dd"><small>${WD[pd.getDay()]}</small><b>${pd.getDate()}</b></div>
+      <div class="mid">${t.length?`${t.filter(x=>x.done).length}/${t.length} tarefas`:'<span style="color:var(--faint)">—</span>'}<div class="icons">${w.map(x => (WT[x.type]||WT.outro).i).join('')}</div></div>
+      <div class="md">${moodE(m)}</div></div>`;
+  }).join('') + `</div>`;
+  return h;
+}
+function renderMonth(){
+  const c = parse(C().cursor), y = c.getFullYear(), m = c.getMonth();
+  const off = (new Date(y, m, 1).getDay()+6)%7, n = new Date(y, m+1, 0).getDate();
+  const pre = `${y}-${pad(m+1)}-`, inM = x => x.date && x.date.startsWith(pre), t0 = today();
+  let h = navRow(MO[m], String(y), t0.startsWith(pre));
+  h += `<div class="cal">${['seg','ter','qua','qui','sex','sáb','dom'].map(d => `<div class="wh">${d}</div>`).join('')}`;
+  for (let i = 0; i < off; i++) h += `<div></div>`;
+  for (let i = 1; i <= n; i++){
+    const d = pre + pad(i), w = db.workouts.filter(x => x.date === d), t = db.tasks.filter(x => x.date === d), md = dayMood(d);
+    h += `<button class="c ${d===t0?'today':''}" data-act="goDay" data-d="${d}"><span class="num">${i}</span>
+      <span class="dots">${[...new Set(w.map(x => x.type))].map(k => `<i style="--c:var(--${(WT[k]||WT.outro).t}-fg)"></i>`).join('')}</span>
+      ${md?`<span class="em">${moodE(md)}</span>`:''}${t.length?`<span class="tk ${t.every(x=>x.done)?'ok':''}"></span>`:''}</button>`;
+  }
+  h += `</div>`;
+  const wk = db.workouts.filter(inM), mx = Math.max(1, ...Object.keys(WT).map(k => wk.filter(w => w.type===k).length));
+  const km = wk.filter(w => w.type==='corrida').reduce((a,w) => a + num(w.f?.km), 0);
+  const tk = db.tasks.filter(inM), lidos = db.books.filter(b => b.status==='lido' && (b.done||'').startsWith(pre)), ub = uSum(db.uber.filter(inM));
+  h += `<div><div class="h"><h3>📊 Resumo do mês</h3></div><div class="stats">
+    <div class="stat"><b data-count="${wk.length}">${wk.length}</b><span>treinos</span></div>
+    <div class="stat"><b data-count="${tk.filter(t=>t.done).length}">${tk.filter(t=>t.done).length}</b><span>tarefas feitas</span></div>
+    <div class="stat"><b>${lidos.length}</b><span>livros lidos</span></div>
+    ${km?`<div class="stat"><b data-count="${km}" data-fmt="dec">${dec(km)}</b><span>km corridos</span></div>`:''}
+    ${ub.ganho?`<div class="stat"><b data-count="${ub.lucro}" data-fmt="brl">${brl(ub.lucro)}</b><span>lucro Uber</span></div>`:''}</div></div>`;
+  if (wk.length) h += `<div class="card">${Object.entries(WT).map(([k,t]) => { const q = wk.filter(w=>w.type===k).length; return q ? `<div class="brow"><span style="width:100px">${t.i} ${t.l}</span><div class="bar" style="--c:var(--${t.t}-fg)"><i style="width:${q/mx*100}%"></i></div><b>${q}</b></div>` : ''; }).join('')}</div>`;
+  return h;
+}
+
+/* ================= TREINOS ================= */
+function renderTreinos(){
+  return seg('treinos', [['treinos','🏋️ Treinos'],['corpo','⚖️ Corpo'],['resultados','🏆 Resultados']], ui.trSeg, 'trSeg')
+    + ({treinos:renderWorkoutsList, corpo:renderBody, resultados:renderResults})[ui.trSeg]();
+}
+
+/* ---------- corpo: peso, medidas e fotos ---------- */
+const byDateAsc = (a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : a.ts - b.ts;
+const kg = v => dec(num(v)) + ' kg';
+const signKg = v => (v > 0 ? '+' : v < 0 ? '−' : '') + dec(Math.abs(v)) + ' kg';
+function bodyCard(b){
+  const extra = [b.fat ? `${b.fat}% gordura` : '', b.waist ? `cintura ${b.waist} cm` : ''].filter(Boolean).join(' · ');
+  return `<div class="card tap" data-act="editBody" data-id="${b.id}"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+    <b style="font-size:17px">⚖️ ${num(b.weight) ? kg(b.weight) : 'Fotos'}</b><span class="time">${cap(dayName(b.date))}, ${fmtShort(b.date)}</span></div>
+    ${extra?`<div class="time">${extra}</div>`:''}${b.notes?`<p class="muted" style="margin:4px 0 0;font-size:14px;white-space:pre-wrap">${esc(b.notes)}</p>`:''}${photoStrip(b.photos)}</div>`;
+}
+function weightChart(list){
+  const days = {30:30, 90:90, 365:365, all:1e5}[ui.bodyRange];
+  let pts = list.filter(b => b.date >= addDays(today(), -days));
+  if (pts.length < 2) pts = list;
+  const W = 340, H = 160, L = 34, R = 10, T = 12, B = 22;
+  const ts = pts.map(b => parse(b.date).getTime()), vs = pts.map(b => num(b.weight));
+  const t0 = Math.min(...ts), t1 = Math.max(...ts), v0 = Math.min(...vs) - .5, v1 = Math.max(...vs) + .5;
+  const X = t => L + (t1 === t0 ? .5 : (t - t0) / (t1 - t0)) * (W - L - R), Y = v => T + (v1 - v) / (v1 - v0) * (H - T - B);
+  const xy = pts.map((b, i) => [X(ts[i]), Y(vs[i])]);
+  const line = xy.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+  const area = `${line} L${xy[xy.length-1][0].toFixed(1)} ${H-B} L${xy[0][0].toFixed(1)} ${H-B} Z`;
+  const mx = Math.max(...vs), mn = Math.min(...vs);
+  return `<div class="card" style="padding:10px 12px"><div class="rng">${[['30','30d'],['90','90d'],['365','1 ano'],['all','Tudo']].map(([k,l]) => `<button data-act="bodyRange" data-v="${k}" class="${ui.bodyRange===k?'on':''}">${l}</button>`).join('')}</div>
+    <svg class="wchart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Gráfico do peso">
+      <defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".25"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>
+      <line class="gl" x1="${L}" x2="${W-R}" y1="${Y(mx)}" y2="${Y(mx)}"/><line class="gl" x1="${L}" x2="${W-R}" y1="${Y(mn)}" y2="${Y(mn)}"/>
+      <text x="0" y="${Y(mx)+3}">${dec(mx)}</text><text x="0" y="${Y(mn)+3}">${dec(mn)}</text>
+      <path class="ar" d="${area}" fill="url(#wg)"/><path class="ln" d="${line}" pathLength="1"/>
+      ${xy.length <= 40 ? xy.map(p => `<circle class="dt" cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.2"/>`).join('') : `<circle class="dt" cx="${xy[xy.length-1][0]}" cy="${xy[xy.length-1][1]}" r="4"/>`}
+      <text x="${L}" y="${H-4}">${fmtShort(pts[0].date)}</text><text x="${W-R}" y="${H-4}" text-anchor="end">${fmtShort(pts[pts.length-1].date)}</text>
+    </svg></div>`;
+}
+function renderBody(){
+  const entries = db.body.slice().sort((a,b) => -byDateAsc(a,b));
+  if (!entries.length) return `<div class="callout"><span class="ci">⚖️</span><div>Registre seu <b>peso</b>, medidas e <b>fotos de evolução</b>. Aqui aparece o gráfico e o seu antes e depois.<br><button class="btn sm" data-act="new" data-v="body">Primeiro registro</button></div></div>`;
+  const ws = db.body.filter(b => num(b.weight)).sort(byDateAsc);
+  let h = '';
+  if (ws.length) {
+    const last = ws[ws.length-1], lw = num(last.weight), d0 = lw - num(ws[0].weight);
+    const m30 = ws.filter(b => b.date >= addDays(today(), -30)), d30 = m30.length > 1 ? lw - num(m30[0].weight) : null;
+    h += `<div class="hero"><small>Peso atual · ${fmtShort(last.date)}</small>
+      <div class="big"><span data-count="${lw}" data-fmt="dec">${dec(lw)}</span><span style="font-size:20px;color:var(--muted)"> kg</span></div>
+      ${ws.length > 1 ? `<div class="kv"><span>Desde ${fmtShort(ws[0].date)}</span><b>${signKg(d0)}</b></div>` : ''}
+      ${d30 !== null ? `<div class="kv"><span>Últimos 30 dias</span><b>${signKg(d30)}</b></div>` : ''}</div>`;
+    if (ws.length > 1) h += weightChart(ws);
+  }
+  const withPh = db.body.filter(b => b.photos && b.photos.length).sort(byDateAsc);
+  if (withPh.length >= 2) {
+    const pair = [withPh[0], withPh[withPh.length-1]];
+    h += `<div><div class="h"><h3>🔁 Antes e depois</h3></div><div class="ba">${pair.map((x, i) => `<figure data-act="viewPhoto" data-ids="${x.photos.join(',')}" data-i="0"><img data-photo="${x.photos[0]}" alt="">
+      <figcaption><b>${i ? 'Depois' : 'Antes'}</b>${fmtShort(x.date)} ${parse(x.date).getFullYear()}${num(x.weight)?` · ${kg(x.weight)}`:''}</figcaption></figure>`).join('')}</div></div>`;
+  }
+  return h + `<div><div class="h"><h3>Histórico</h3><button data-act="new" data-v="body">+ Registrar</button></div>${entries.map(bodyCard).join('')}</div>`;
+}
+
+/* ---------- resultados: tempos, cargas, campeonatos ---------- */
+function resultCard(r){
+  return `<div class="card res tap" data-act="editResult" data-id="${r.id}"><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${wTag(r.type)}${r.pr?'<span class="pr">🏅 RECORDE</span>':''}
+    <span class="time">${fmtShort(r.date)} ${parse(r.date).getFullYear()}</span></div>
+    <div style="margin-top:6px;font-weight:600">${esc(r.title)}</div>${r.result?`<div class="big">${esc(r.result)}</div>`:''}
+    ${r.notes?`<p class="muted" style="margin:4px 0 0;font-size:14px;white-space:pre-wrap">${esc(r.notes)}</p>`:''}${photoStrip(r.photos)}</div>`;
+}
+function renderResults(){
+  const l = db.results.filter(r => ui.wFilter === 'todos' || r.type === ui.wFilter).sort((a,b) => -byDateAsc(a,b));
+  let h = `<div class="chips"><button class="chip ${ui.wFilter==='todos'?'on':''}" data-act="wFilter" data-v="todos">Todos</button>
+    ${Object.entries(WT).map(([k,t]) => `<button class="chip ${ui.wFilter===k?'on':''}" data-act="wFilter" data-v="${k}">${t.i} ${t.l}</button>`).join('')}</div>`;
+  const prs = l.filter(r => r.pr).length;
+  if (l.length) h += `<div class="stats"><div class="stat"><b data-count="${l.length}">${l.length}</b><span>resultados</span></div><div class="stat"><b data-count="${prs}">${prs}</b><span>recordes pessoais</span></div></div>`;
+  if (!l.length) return h + `<div class="callout"><span class="ci">🏆</span><div>Guarde aqui seus resultados: tempo de Hyrox, carga máxima, pace da corrida, campeonatos e graduações no jiu, com fotos.<br><button class="btn sm" data-act="new" data-v="result">Registrar resultado</button></div></div>`;
+  return h + l.map(resultCard).join('');
+}
+
+function renderWorkoutsList(){
+  const t0 = today(), ws = weekStart(t0), pre = t0.slice(0,8);
+  const list = db.workouts.filter(w => ui.wFilter==='todos' || w.type===ui.wFilter).sort((a,b) => a.date < b.date ? 1 : a.date > b.date ? -1 : b.ts - a.ts);
+  const wkN = list.filter(w => w.date >= ws && w.date <= t0).length, moN = list.filter(w => w.date.startsWith(pre)), min = moN.reduce((a,w) => a + (+w.dur||0), 0);
+  let h = `<div class="chips"><button class="chip ${ui.wFilter==='todos'?'on':''}" data-act="wFilter" data-v="todos">Todos</button>
+    ${Object.entries(WT).map(([k,t]) => `<button class="chip ${ui.wFilter===k?'on':''}" data-act="wFilter" data-v="${k}">${t.i} ${t.l}</button>`).join('')}</div>
+    <div class="stats"><div class="stat"><b data-count="${wkN}">${wkN}</b><span>nesta semana</span></div><div class="stat"><b data-count="${moN.length}">${moN.length}</b><span>neste mês</span></div>
+    <div class="stat"><b>${Math.floor(min/60)}h${pad(min%60)}</b><span>no mês</span></div></div>`;
+  if (!list.length) return h + `<div class="callout"><span class="ci">🥋</span><div>Nenhum treino ainda. Toque no <b>+</b> para registrar.</div></div>`;
+  return h + `<div class="h"><h3>Histórico</h3></div>` + list.slice(0, 150).map(w => woCard(w, true)).join('');
+}
+
+/* ================= UBER ================= */
+function uRange(){
+  const c = ui.cal.uber, d = c.cursor;
+  if (c.mode === 'dia') return [d, d];
+  if (c.mode === 'semana') { const ws = weekStart(d); return [ws, addDays(ws, 6)]; }
+  const p = parse(d);
+  return [ymd(new Date(p.getFullYear(), p.getMonth(), 1)), ymd(new Date(p.getFullYear(), p.getMonth()+1, 0))];
+}
+function renderUber(){
+  const c = ui.cal.uber, sg = seg('uber', [['dia','Dia'],['semana','Semana'],['mes','Mês']], c.mode, 'mode');
+  if (!num(db.settings.kmL) || !num(db.settings.fuel))
+    return sg + `<div class="callout blue"><span class="ci">⛽</span><div>Primeiro, me diga quantos <b>km/l</b> seu carro faz e o <b>preço da gasolina</b>. Com isso eu calculo o gasto de combustível de cada dia.<br><button class="btn sm" data-act="uberCfg">Configurar</button></div></div>`;
+  const [a, b] = uRange(), list = db.uber.filter(e => e.date >= a && e.date <= b).sort((x,y) => x.date < y.date ? 1 : -1), s = uSum(list);
+  const t0 = today(), cur = t0 >= a && t0 <= b, days = diffDays(b, a) + 1, worked = new Set(list.map(e => e.date)).size;
+  let label, sub;
+  if (c.mode === 'dia') { label = dayName(a); sub = fmtLong(a); }
+  else if (c.mode === 'semana') { label = cur ? 'Esta semana' : `Semana de ${fmtShort(a)}`; sub = `${fmtShort(a)} – ${fmtShort(b)}`; }
+  else { label = MO[parse(a).getMonth()]; sub = String(parse(a).getFullYear()); }
+  let h = navRow(label, sub, cur);
+
+  if (!list.length) {
+    h += `<div class="callout"><span class="ci">🚗</span><div>Nenhum registro ${c.mode==='dia'?'nesse dia':c.mode==='semana'?'nessa semana':'nesse mês'}.<br><button class="btn sm" data-act="new" data-v="uber">Registrar dia de Uber</button></div></div>`;
+    return sg + `<div id="carousel">${h}</div>`;
+  }
+  h += `<div class="hero"><small>Lucro estimado</small><div class="big ${s.lucro<0?'neg':''}" data-count="${s.lucro}" data-fmt="brl">${brl(s.lucro)}</div>
+    <div class="kv"><span>Ganhos</span><b>${brl(s.ganho)}</b></div>
+    <div class="kv"><span>Combustível (${dec(s.litros)} L)</span><b>− ${brl(s.comb)}</b></div>
+    ${s.outros?`<div class="kv"><span>Outros gastos</span><b>− ${brl(s.outros)}</b></div>`:''}</div>`;
+  h += `<div class="stats two"><div class="stat"><b data-count="${s.km}">${dec(s.km,0)}</b><span>km rodados</span></div>
+    <div class="stat"><b>${s.km?brl(s.ganho/s.km):'—'}</b><span>ganho por km</span></div>
+    <div class="stat"><b>${s.km?brl(s.lucro/s.km):'—'}</b><span>lucro por km</span></div>
+    ${s.horas?`<div class="stat"><b>${brl(s.lucro/s.horas)}</b><span>lucro por hora</span></div>`:''}
+    ${c.mode!=='dia'?`<div class="stat"><b>${worked}</b><span>dias rodados</span></div><div class="stat"><b>${brl(s.lucro/worked)}</b><span>média por dia</span></div>`:''}
+    ${s.corridas?`<div class="stat"><b>${s.corridas}</b><span>corridas</span></div>`:''}</div>`;
+  if (c.mode !== 'dia' && cur) {
+    const elapsed = diffDays(t0, a) + 1, proj = s.lucro / elapsed * days;
+    h += `<div class="callout green"><span class="ci">📈</span><div><b>Previsão: ${brl(proj)}</b> de lucro até o fim ${c.mode==='semana'?'da semana':'do mês'}, se você mantiver o ritmo dos últimos ${elapsed} dia${elapsed>1?'s':''}.</div></div>`;
+  }
+  if (c.mode !== 'dia') {
+    const ds = [...Array(days)].map((_,i) => addDays(a, i)), vals = ds.map(d => uSum(db.uber.filter(e => e.date === d)).lucro), mx = Math.max(1, ...vals.map(Math.abs));
+    h += `<div><div class="h"><h3>Lucro por dia</h3></div><div class="chart">${ds.map((d,i) => {
+      const v = vals[i], pd = parse(d), lab = c.mode==='semana' ? WD[pd.getDay()] : (pd.getDate()===1 || pd.getDate()%5===0 ? pd.getDate() : '');
+      return `<button class="col" data-act="uberDay" data-d="${d}" aria-label="${fmtShort(d)}: ${brl(v)}"><i class="${v<0?'neg':v===0?'zero':''}" style="height:${Math.abs(v)/mx*100}%;animation-delay:${i*(c.mode==='semana'?40:12)}ms"></i><span>${lab}</span></button>`;
+    }).join('')}</div></div>`;
+  }
+  h += `<div><div class="h"><h3>Registros</h3><button data-act="new" data-v="uber">+ Registrar</button></div>${list.map(uberRow).join('')}</div>`;
+  return sg + `<div id="carousel">${h}</div>`;
+}
+
+/* ================= CONTEÚDO ================= */
+const stTag = k => `<span class="tag tg-${ST[k].t}">${ST[k].i} ${ST[k].l}</span>`;
+function contentCard(c){
+  const nx = ST_ORDER[ST_ORDER.indexOf(c.status) + 1], w = words(c.script);
+  return `<div class="card tap" data-act="editContent" data-id="${c.id}">
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${stTag(c.status)}${(c.platforms||[]).map(k => `<span class="tag">${PL[k]||k}</span>`).join('')}
+      ${c.status === 'postado' && c.posted ? `<span class="time">${fmtShort(c.posted)}</span>` : c.pubDate ? `<span class="time">📅 ${fmtShort(c.pubDate)}</span>` : ''}</div>
+    <b style="display:block;margin-top:6px;font-weight:600">${esc(c.title)}</b>
+    ${c.hook ? `<p class="muted" style="margin:2px 0 0;font-size:14px">🪝 ${esc(c.hook)}</p>` : c.idea ? `<p class="muted" style="margin:2px 0 0;font-size:14px;white-space:pre-wrap;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">${esc(c.idea)}</p>` : ''}
+    ${(c.audios||[]).map(a => audioRow(a)).join('')}
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;gap:8px"><span class="time">${w ? `✍️ ${w} palavras · ~${fmtDur(w/2.5)} de fala` : ''}</span>
+    ${nx ? `<button class="mini" data-act="nextStatus" data-id="${c.id}">→ ${ST[nx].i} ${ST[nx].l}</button>` : ''}</div></div>`;
+}
+function renderConteudo(){
+  const ideas = db.content.filter(c => c.status === 'ideia'), prod = db.content.filter(c => !['ideia','postado'].includes(c.status)), post = db.content.filter(c => c.status === 'postado');
+  const pre = today().slice(0, 8), postedM = post.filter(c => (c.posted||'').startsWith(pre)).length;
+  let h = gridCard('conteudo') + `<div class="stats"><div class="stat"><b data-count="${postedM}">${postedM}</b><span>postados no mês</span></div>
+    <div class="stat"><b data-count="${prod.length}">${prod.length}</b><span>em produção</span></div><div class="stat"><b data-count="${ideas.length}">${ideas.length}</b><span>ideias</span></div></div>`;
+  h += seg('conteudo', [['ideias', `💡 Ideias`], ['producao', `🎬 Produção`], ['postados', `✅ Postados`]], ui.ctSeg, 'ctSeg');
+  const byUpd = (a, b) => (b.upd || b.ts) - (a.upd || a.ts);
+  if (ui.ctSeg === 'ideias') {
+    h += `<form class="card cmp" data-form="idea"><textarea name="idea" rows="2" placeholder="Anote uma ideia de conteúdo… (ou grave um áudio)"></textarea>
+      <div id="cmpAud">${pendingAudios.map(a => audioRow(a, 'cmp')).join('')}</div>
+      <div class="cmpbar"><button type="button" class="btn ghost sm" data-act="recAudio" data-target="cmp">🎤 Gravar áudio</button><button class="btn sm">Salvar ideia</button></div></form>`;
+    h += ideas.length ? `<div>${ideas.sort(byUpd).map(contentCard).join('')}</div>` : `<div class="empty">Seu banco de ideias está vazio. Escreva ou grave a primeira ideia acima.</div>`;
+  } else if (ui.ctSeg === 'producao') {
+    h += prod.length ? ST_ORDER.filter(k => !['ideia','postado'].includes(k)).map(k => { const l = prod.filter(c => c.status === k); return l.length ? `<div><div class="h"><h3>${ST[k].i} ${ST[k].l} <span class="n">${l.length}</span></h3></div>${l.sort(byUpd).map(contentCard).join('')}</div>` : ''; }).join('')
+      : `<div class="callout"><span class="ci">🎬</span><div>Nada em produção. Pegue uma ideia e toque em <b>→ ✍️ Roteiro</b> para começar.</div></div>`;
+  } else {
+    h += post.length ? post.sort((a, b) => (b.posted||'').localeCompare(a.posted||'')).map(contentCard).join('') : `<div class="empty">Nenhum conteúdo postado ainda.</div>`;
+  }
+  return h;
+}
+function contentForm(c){
+  const isNew = !c; c = c || {title:'', status:'ideia', platforms:['instagram'], pubDate:'', hook:'', idea:'', script:'', caption:'', audios:[], posted:''};
+  openSheet({ title: isNew ? 'Novo conteúdo' : 'Conteúdo',
+    html: `<input class="ptitle" name="title" required value="${esc(c.title)}" placeholder="Tema do conteúdo">`
+      + `<div style="padding:4px 0 6px">${opts('status', ST_ORDER.map(k => [k, `${ST[k].i} ${ST[k].l}`, ST[k].t]), c.status)}</div>`
+      + prop('📱','Plataformas', opts('platforms', Object.entries(PL), c.platforms||[], '', 'checkbox'))
+      + prop('📅','Publicar em', `<input type="date" name="pubDate" value="${c.pubDate||''}">`)
+      + prop('🪝','Gancho', `<textarea name="hook" rows="2" placeholder="Os 3 primeiros segundos…">${esc(c.hook)}</textarea>`)
+      + prop('💡','Ideia', `<textarea name="idea" rows="2" placeholder="Qual a mensagem central?">${esc(c.idea)}</textarea>`)
+      + `<div class="h" style="margin-top:14px"><h3>🎤 Áudios</h3><button type="button" data-act="recAudio" data-target="form">🎤 Gravar</button></div>
+         <div id="audField">${(c.audios||[]).map(a => audioRow(a, 'form')).join('')}</div><input type="hidden" name="audios" value="${esc(JSON.stringify(c.audios||[]))}">`
+      + `<div class="h" style="margin-top:14px"><h3>✍️ Roteiro</h3><span class="time" id="wc"></span></div>
+         <textarea name="script" rows="12" style="min-height:260px;padding:8px 0;font-size:17px;line-height:1.6" placeholder="Escreva o roteiro aqui…">${esc(c.script)}</textarea>`
+      + `<div class="h" style="margin-top:14px"><h3>💬 Legenda</h3></div><textarea name="caption" rows="4" style="padding:8px 0" placeholder="Legenda, hashtags, chamada para ação…">${esc(c.caption)}</textarea>`,
+    onMount: f => {
+      const sc = f.elements.namedItem('script'), upd = () => { const w = words(sc.value), el = $('#wc'); if (el) el.textContent = w ? `${w} palavras · ~${fmtDur(w/2.5)} de fala` : ''; };
+      sc.addEventListener('input', upd); upd();
+      if (isNew) f.elements.namedItem('title').focus();
+    },
+    onSubmit: fd => {
+      const o = {title:fd.get('title').trim(), status:fd.get('status'), platforms:fd.getAll('platforms'), pubDate:fd.get('pubDate'), hook:fd.get('hook').trim(),
+        idea:fd.get('idea'), script:fd.get('script'), caption:fd.get('caption'), audios:JSON.parse(fd.get('audios') || '[]'), upd:Date.now()};
+      if (!o.title) return false;
+      o.posted = o.status === 'postado' ? (c.posted || (o.pubDate && o.pubDate <= today() ? o.pubDate : today())) : '';
+      db.contentLog[today()] = 1;
+      if (isNew) db.content.push({id:uid(), ts:Date.now(), ...o}); else Object.assign(c, o);
+      save({enter:true}); if (o.status === 'postado' && !c.posted) toast('✅ Conteúdo postado!');
+    },
+    onDelete: isNew ? null : () => { db.content = db.content.filter(x => x.id !== c.id); save(); } });
+}
+
+/* ================= NOTAS ================= */
+function renderNotas(){
+  return seg('notas', [['ideias','💡 Ideias'],['diario','📔 Diário']], ui.notesSeg, 'notesSeg')
+    + `<div class="row" style="background:var(--hover);margin-bottom:8px;padding:0 10px"><span class="muted">🔍</span><input id="search" type="search" placeholder="Buscar" value="${esc(ui.q)}"></div>
+    <div id="notesList">${notesList()}</div>`;
+}
+function notesList(){
+  const q = ui.q.trim().toLowerCase();
+  if (ui.notesSeg === 'diario'){
+    const l = db.journal.filter(j => !q || j.text.toLowerCase().includes(q)).sort((a,b) => b.ts - a.ts);
+    return l.length ? l.map(j => jrCard(j, true)).join('') : `<div class="empty">${q?'Nada encontrado.':'Seu diário está vazio. Como você está hoje?'}</div>`;
+  }
+  const l = db.notes.filter(n => !q || n.text.toLowerCase().includes(q)).sort((a,b) => (b.pin?1:0)-(a.pin?1:0) || b.upd - a.upd);
+  if (!l.length) return `<div class="empty">${q?'Nada encontrado.':'Anote pensamentos e ideias aqui. Use #tags para organizar.'}</div>`;
+  return l.map(n => {
+    const [first, ...rest] = n.text.split('\n'), body = rest.join('\n').trim();
+    return `<div class="card note tap" data-act="editNote" data-id="${n.id}"><b>${n.pin?'📌 ':''}${esc(first.slice(0,90))}</b>
+      ${body?`<p class="muted">${esc(body)}</p>`:''}
+      <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">${tagsOf(n.text).map((t,i) => `<span class="tag tg-${COVER_COLORS[i%COVER_COLORS.length]}">${esc(t)}</span>`).join('')}<span class="time">${fmtShort(ymd(new Date(n.upd)))}</span></div></div>`;
+  }).join('');
+}
+
+/* ================= LIVROS ================= */
+function renderLivros(){
+  const y = String(new Date().getFullYear()), lidosAno = db.books.filter(b => b.status==='lido' && (b.done||'').startsWith(y)).length;
+  let h = seg('livros', Object.entries(BOOKST).map(([k,l]) => [k, `${l} ${db.books.filter(b=>b.status===k).length||''}`]), ui.booksSeg, 'booksSeg');
+  if (ui.booksSeg==='lido' && lidosAno) h += `<div class="callout green"><span class="ci">🏆</span><div><b data-count="${lidosAno}">${lidosAno}</b> livro${lidosAno>1?'s':''} lido${lidosAno>1?'s':''} em ${y}</div></div>`;
+  const l = db.books.filter(b => b.status === ui.booksSeg).sort((a,b) => ui.booksSeg==='lido' ? (b.done||'').localeCompare(a.done||'') : b.ts - a.ts);
+  return h + (l.length ? `<div class="gallery">${l.map(bookCard).join('')}</div>` : `<div class="empty">Nenhum livro aqui ainda. Toque no + para adicionar.</div>`);
+}
+
+/* ================= AJUSTES ================= */
+function renderAjustes(){
+  const s = db.settings, lb = s.lastBackup ? `${fmtShort(ymd(new Date(s.lastBackup)))} às ${hm(s.lastBackup)}` : 'nunca';
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const rem = db.reminders.map(r => `<div class="row tap" data-act="editReminder" data-id="${r.id}"><span style="font-size:20px">⏰</span>
+      <div style="flex:1;min-width:0"><b style="font-weight:500">${esc(r.title)}</b><div class="time">${(r.days||[]).slice().sort().map(d => WD[d]).join(', ')} às ${r.time}</div></div>
+      <button class="mini" data-act="calendar" data-id="${r.id}">📅 Ativar</button></div>`).join('');
+  return `<div class="h"><h3>⏰ Lembretes</h3><button data-act="new" data-v="reminder">+ Novo</button></div>
+    ${rem || '<div class="empty">Nenhum lembrete.</div>'}
+    <div class="callout" style="font-size:14px"><span class="ci">💡</span><div>Para o celular avisar mesmo com o app fechado, toque em <b>📅 Ativar</b> uma vez em cada lembrete. Ele vira um evento semanal com alarme no calendário do celular.</div></div>
+
+    <div class="h"><h3>🚗 Uber</h3><button data-act="uberCfg">Editar</button></div>
+    <div class="kv"><span>Consumo do carro</span><b>${s.kmL?dec(num(s.kmL))+' km/l':'—'}</b></div>
+    <div class="kv"><span>Preço da gasolina</span><b>${s.fuel?brl(num(s.fuel))+'/L':'—'}</b></div>
+
+    <div class="h"><h3>💾 Backup</h3></div>
+    <p style="margin:6px 0">Último backup: <b>${lb}</b></p>
+    <p class="muted" style="margin:0 0 4px;font-size:14px">Seus dados ficam só neste celular. O app te lembra a cada 7 dias. Na tela de compartilhar, escolha <b>Drive</b> (ou "Salvar em Arquivos").</p>
+    <button class="btn block" data-act="backup">Fazer backup agora</button>
+    <button class="btn ghost block" data-act="import">Restaurar de um backup</button>
+    <input type="file" id="importFile" accept=".json,application/json" class="hidden">
+
+    <div class="h"><h3>🔒 Privacidade</h3></div>
+    <p style="margin:6px 0">PIN de bloqueio: <b>${s.pinHash?'ativado':'desativado'}</b></p>
+    <p class="muted" style="margin:0;font-size:14px">Pede o PIN ao abrir e depois de 1 minuto fora do app.</p>
+    ${s.pinHash ? `<button class="btn ghost block" data-act="setPin">Trocar PIN</button><button class="btn danger block" data-act="removePin">Remover PIN</button>`
+                : `<button class="btn block" data-act="setPin">Criar PIN</button>`}
+
+    <div class="h"><h3>📲 Instalar no celular</h3></div>
+    <p style="font-size:15px">${isIOS ? 'No Safari: toque em <b>Compartilhar</b> → <b>Adicionar à Tela de Início</b>.' : 'No Chrome: menu <b>⋮</b> → <b>Instalar app</b>.'}</p>
+
+    <div class="h"><h3>🗂️ Dados</h3></div>
+    <p class="muted" style="font-size:14px">${db.tasks.length} tarefas · ${db.workouts.length} treinos · ${db.uber.length} dias de Uber · ${db.journal.length} no diário · ${db.notes.length} notas · ${db.books.length} livros · ${db.body.length} registros de peso · ${db.results.length} resultados · ${db.content.length} conteúdos<br>O backup inclui fotos e áudios.</p>
+    <button class="btn danger block" data-act="wipe">Apagar todos os dados</button>
+    <p class="time" style="text-align:center;margin-top:20px">Segundo Cérebro · v4</p>`;
+}
+
+/* ================= folha inferior ================= */
+let sheetOnSubmit = null, sheetOnDelete = null;
+function openSheet({title, html, save='Salvar', onSubmit, onDelete, onMount}){
+  const old = $('#ov'); if (old) old.remove();
+  const ov = document.createElement('div');
+  ov.className = 'ov'; ov.id = 'ov';
+  ov.innerHTML = `<div class="sheet" role="dialog"><div class="sh-head"><button type="button" data-act="closeSheet">${save?'Cancelar':'Fechar'}</button><b>${title}</b>
+    ${save?`<button class="save" type="submit" form="shForm">${save}</button>`:'<span style="min-width:70px"></span>'}</div>
+    <form id="shForm" autocomplete="off">${html}${onDelete?`<button type="button" class="btn danger block" data-act="sheetDelete">Excluir</button>`:''}</form></div>`;
+  document.body.appendChild(ov); document.body.classList.add('sheet-open'); hydratePhotos(ov);
+  sheetOnSubmit = onSubmit; sheetOnDelete = onDelete;
+  ov.addEventListener('click', e => { if (e.target === ov) closeSheet(); });
+  $('#shForm').addEventListener('submit', e => { e.preventDefault(); if (sheetOnSubmit && sheetOnSubmit(new FormData(e.target), e.target) !== false) { buzz(); closeSheet(); } });
+  // arrastar para baixo para fechar (como no iOS)
+  const sh = ov.querySelector('.sheet'), head = ov.querySelector('.sh-head'); let y0 = null, dy = 0;
+  head.addEventListener('touchstart', e => { if (e.target.closest('button')) return; y0 = e.touches[0].clientY; dy = 0; sh.style.transition = 'none'; }, {passive:true});
+  head.addEventListener('touchmove', e => { if (y0 == null) return; dy = Math.max(0, e.touches[0].clientY - y0); sh.style.transform = `translateY(${dy}px)`; }, {passive:true});
+  head.addEventListener('touchend', () => { if (y0 == null) return; y0 = null; sh.style.transition = 'transform .35s var(--ios)'; if (dy > 110) closeSheet(); else sh.style.transform = ''; });
+  onMount && setTimeout(() => onMount($('#shForm')), 60);
+}
+function closeSheet(){
+  if (rec && rec.btn.closest('#ov')) rec.mr.stop();
+  const o = $('#ov'); if (!o) return;
+  o.id = ''; document.body.classList.remove('sheet-open');
+  const sh = o.querySelector('.sheet'); sh.style.transition = ''; sh.style.transform = '';
+  o.classList.add('out'); setTimeout(() => o.remove(), 340);
+}
+const prop = (icon, label, inner) => `<div class="prop"><label><span class="pi">${icon}</span>${label}</label><div>${inner}</div></div>`;
+const opts = (name, list, val, cls='', type='radio') => `<div class="opts ${cls}">${list.map(([v,l,tc]) => {
+  const on = Array.isArray(val) ? val.map(String).includes(String(v)) : String(val)===String(v);
+  return `<label><input type="${type}" name="${name}" value="${v}" ${on?'checked':''}><span class="${tc?'tg-'+tc:''}">${l}</span></label>`; }).join('')}</div>`;
+
+function taskForm(t){
+  const isNew = !t; t = t || {title:'', date:ui.tab==='hoje'?C().cursor:today(), important:false, notes:''};
+  openSheet({ title: isNew?'Nova tarefa':'Tarefa',
+    html: `<input class="ptitle" name="title" required value="${esc(t.title)}" placeholder="Sem título">`
+      + prop('📅','Data', `<input type="date" name="date" required value="${t.date}">`)
+      + prop('🚩','Prioridade', opts('important', [['0','Normal','gray'],['1','Importante','red']], t.important?1:0))
+      + `<div class="pbody"><textarea name="notes" placeholder="Detalhes, links…">${esc(t.notes)}</textarea></div>`,
+    onSubmit: fd => {
+      const o = {title:fd.get('title').trim(), date:fd.get('date'), important:fd.get('important')==='1', notes:fd.get('notes')};
+      if (!o.title) return false;
+      if (isNew) db.tasks.push({id:uid(), ts:Date.now(), done:false, ...o}); else Object.assign(t, o);
+      save();
+    },
+    onDelete: isNew ? null : () => { db.tasks = db.tasks.filter(x => x.id !== t.id); save(); },
+    onMount: f => isNew && f.elements.namedItem('title').focus() });
+}
+
+function woFields(type, f){
+  return (WF[type]||[]).map(([k,l,ic,kind,x]) => {
+    const v = esc(f[k] ?? ''), n = 'f_'+k;
+    if (kind==='select') return prop(ic, l, opts(n, x.map(o => [o,o]), f[k] ?? x[0]));
+    if (kind==='textarea') return prop(ic, l, `<textarea name="${n}" rows="2" placeholder="${x||''}">${v}</textarea>`);
+    if (kind==='number') return prop(ic, l, `<input name="${n}" type="number" inputmode="numeric" min="0" value="${v}" placeholder="0">`);
+    if (kind==='decimal') return prop(ic, l, `<input name="${n}" inputmode="decimal" value="${v}" placeholder="${x}">`);
+    return prop(ic, l, `<input name="${n}" value="${v}" placeholder="${x||''}">`);
+  }).join('');
+}
+function workoutForm(w){
+  const isNew = !w; w = w || {type:'jiujitsu', date:ui.tab==='hoje'?C().cursor:today(), dur:'', int:3, notes:'', f:{}};
+  openSheet({ title: isNew?'Registrar treino':'Treino',
+    html: `<div style="padding:8px 0 4px">${opts('type', Object.entries(WT).map(([k,t]) => [k, `${t.i} ${t.l}`, t.t]), w.type)}</div>`
+      + prop('📅','Data', `<input type="date" name="date" required value="${w.date}">`)
+      + prop('⏳','Duração', `<input name="dur" type="number" inputmode="numeric" min="0" value="${esc(w.dur)}" placeholder="minutos">`)
+      + `<div id="woF">${woFields(w.type, w.f||{})}</div>`
+      + prop('⚡','Intensidade', opts('int', [[1,'1'],[2,'2'],[3,'3'],[4,'4'],[5,'5']], w.int))
+      + photoField(w.photos||[])
+      + `<div class="pbody"><textarea name="notes" placeholder="Como foi? Sensações, o que melhorar…">${esc(w.notes)}</textarea></div>`,
+    onMount: f => f.querySelectorAll('input[name=type]').forEach(r => r.addEventListener('change', () => { $('#woF').innerHTML = woFields(r.value, r.value===w.type ? w.f||{} : {}); })),
+    onSubmit: fd => {
+      const f = {}; for (const [k,v] of fd.entries()) if (k.startsWith('f_') && String(v).trim()) f[k.slice(2)] = String(v).trim();
+      const o = {type:fd.get('type'), date:fd.get('date'), dur:fd.get('dur'), int:+fd.get('int')||null, notes:fd.get('notes'), f, photos:readPhotos(fd)};
+      if (isNew) db.workouts.push({id:uid(), ts:Date.now(), ...o}); else Object.assign(w, o);
+      save(); if (isNew) toast(`${WT[o.type].i} Treino registrado`);
+    },
+    onDelete: isNew ? null : () => { db.workouts = db.workouts.filter(x => x.id !== w.id); save(); } });
+}
+
+function journalForm(j){
+  const isNew = !j; j = j || {date:ui.tab==='hoje'?C().cursor:today(), mood:null, text:''};
+  openSheet({ title: isNew?'Diário':'Entrada do diário',
+    html: `<div style="padding:10px 0 4px">${opts('mood', MOODS.map(m => [m.v, m.e]), j.mood, 'moods')}</div>`
+      + prop('📅','Data', `<input type="date" name="date" required value="${j.date}">`)
+      + `<div class="pbody"><textarea name="text" rows="10" style="min-height:220px" placeholder="O que aconteceu, o que você sentiu, pelo que é grato…">${esc(j.text)}</textarea></div>`,
+    onSubmit: fd => {
+      const o = {date:fd.get('date'), mood:+fd.get('mood')||null, text:fd.get('text').trim()};
+      if (!o.text && !o.mood) return false;
+      if (isNew) db.journal.push({id:uid(), ts:Date.now(), ...o}); else Object.assign(j, o);
+      save();
+    },
+    onDelete: isNew ? null : () => { db.journal = db.journal.filter(x => x.id !== j.id); save(); } });
+}
+
+function noteForm(n){
+  const isNew = !n; n = n || {text:'', pin:false};
+  openSheet({ title: isNew?'Nova nota':'Nota',
+    html: `<textarea name="text" rows="14" style="min-height:300px;padding:8px 0;font-size:17px;line-height:1.6" placeholder="Primeira linha vira o título.\nUse #tags para organizar (#ideia #trabalho)">${esc(n.text)}</textarea>
+      <label class="row" style="gap:10px"><input type="checkbox" name="pin" ${n.pin?'checked':''} style="width:auto"> 📌 Fixar no topo</label>`,
+    onSubmit: fd => {
+      const text = fd.get('text').trim(); if (!text) return false;
+      if (isNew) db.notes.push({id:uid(), ts:Date.now(), upd:Date.now(), text, pin:!!fd.get('pin')});
+      else Object.assign(n, {text, pin:!!fd.get('pin'), upd:Date.now()});
+      save();
+    },
+    onDelete: isNew ? null : () => { db.notes = db.notes.filter(x => x.id !== n.id); save(); },
+    onMount: f => isNew && f.elements.namedItem('text').focus() });
+}
+
+/* ---------- livros + busca de capa ---------- */
+let coverResults = [];
+async function searchCovers(q){
+  const out = [];
+  try {
+    const r = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=12&printType=books`);
+    const j = await r.json();
+    for (const it of j.items || []) {
+      const v = it.volumeInfo || {}, img = v.imageLinks && (v.imageLinks.thumbnail || v.imageLinks.smallThumbnail);
+      if (!img) continue;
+      out.push({title:v.title, author:(v.authors||[]).join(', '), pages:v.pageCount||'', cover:img.replace(/^http:/,'https:').replace('&edge=curl','') + '&fife=w400-h600'});
+    }
+  } catch(e){}
+  if (out.length < 6) {
+    try {
+      const r = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&limit=12&fields=title,author_name,cover_i,number_of_pages_median`);
+      const j = await r.json();
+      for (const d of j.docs || []) if (d.cover_i) out.push({title:d.title, author:(d.author_name||[]).join(', '), pages:d.number_of_pages_median||'', cover:`https://covers.openlibrary.org/b/id/${d.cover_i}-L.jpg`});
+    } catch(e){}
+  }
+  return out.slice(0, 12);
+}
+function bookForm(b){
+  const isNew = !b; b = b || {title:'', author:'', status:ui.tab==='livros'?ui.booksSeg:'lendo', pages:'', cur:'', rating:null, done:'', notes:'', cover:''};
+  openSheet({ title: isNew?'Novo livro':'Livro',
+    html: `<div id="cvPrev" class="cvprev" style="padding-top:8px">${b.cover?`<img src="${esc(b.cover)}" alt="" referrerpolicy="no-referrer">`:''}
+        <input class="ptitle" name="title" required value="${esc(b.title)}" placeholder="Título do livro" style="flex:1;min-width:0"></div>
+      <input type="hidden" name="cover" value="${esc(b.cover||'')}">
+      <button type="button" class="btn ghost sm" data-act="findCover" style="margin:4px 0 8px">🔍 Buscar capa e dados</button>
+      <div id="cvRes"></div>`
+      + prop('👤','Autor', `<input name="author" value="${esc(b.author)}" placeholder="Vazio">`)
+      + prop('📌','Status', opts('status', [['lendo','📖 Lendo','blue'],['quero','🔖 Quero ler','gray'],['lido','✅ Lido','green']], b.status))
+      + prop('📄','Páginas', `<input name="pages" type="number" inputmode="numeric" min="0" value="${esc(b.pages)}" placeholder="Total">`)
+      + prop('🔖','Página atual', `<input name="cur" type="number" inputmode="numeric" min="0" value="${esc(b.cur)}" placeholder="0">`)
+      + prop('🏁','Terminei em', `<input name="done" type="date" value="${b.done||''}">`)
+      + prop('⭐','Nota', opts('rating', [1,2,3,4,5].map(r => [r, '★'.repeat(r)]), b.rating, 'rate'))
+      + `<div class="pbody"><textarea name="notes" placeholder="Anotações e citações…">${esc(b.notes)}</textarea></div>`,
+    onSubmit: fd => {
+      const o = {title:fd.get('title').trim(), author:fd.get('author').trim(), status:fd.get('status'), pages:+fd.get('pages')||'', cur:+fd.get('cur')||'',
+                 done:fd.get('done'), rating:+fd.get('rating')||null, notes:fd.get('notes'), cover:fd.get('cover')};
+      if (!o.title) return false;
+      if (o.status==='lido' && !o.done) o.done = today();
+      if (isNew) db.books.push({id:uid(), ts:Date.now(), ...o}); else Object.assign(b, o);
+      save();
+    },
+    onDelete: isNew ? null : () => { db.books = db.books.filter(x => x.id !== b.id); save(); } });
+}
+async function findCover(){
+  const f = $('#shForm'), q = (f.elements.namedItem('title').value + ' ' + f.elements.namedItem('author').value).trim();
+  const box = $('#cvRes');
+  if (!q) { box.innerHTML = '<div class="empty">Digite o título primeiro.</div>'; return; }
+  box.innerHTML = '<div class="empty">Buscando…</div>';
+  coverResults = await searchCovers(q);
+  if (!$('#cvRes')) return;
+  box.innerHTML = coverResults.length
+    ? `<p class="time" style="margin:0">Toque na capa certa:</p><div class="covers">${coverResults.map((r,i) => `<button type="button" data-act="pickCover" data-i="${i}"><img src="${esc(r.cover)}" alt="" referrerpolicy="no-referrer" loading="lazy"><span>${esc(r.title)}</span></button>`).join('')}</div>`
+    : '<div class="empty">Não encontrei capas. Tente só o título, ou em inglês.</div>';
+}
+function pickCover(i){
+  const r = coverResults[i], f = $('#shForm'); if (!r || !f) return;
+  f.elements.namedItem('cover').value = r.cover;
+  if (!f.elements.namedItem('author').value && r.author) f.elements.namedItem('author').value = r.author;
+  if (!f.elements.namedItem('pages').value && r.pages) f.elements.namedItem('pages').value = r.pages;
+  const prev = $('#cvPrev'), old = prev.querySelector('img'); if (old) old.remove();
+  prev.insertAdjacentHTML('afterbegin', `<img src="${esc(r.cover)}" alt="" referrerpolicy="no-referrer" style="animation:pop .45s var(--spring)">`);
+  $('#cvRes').innerHTML = ''; buzz();
+}
+function pageForm(b){
+  openSheet({ title: 'Onde você parou?',
+    html: `<div class="cvprev" style="padding:10px 0">${b.cover?`<img src="${esc(b.cover)}" alt="" referrerpolicy="no-referrer">`:''}<b>${esc(b.title)}</b></div>`
+      + prop('🔖', `Página${b.pages?` (de ${b.pages})`:''}`, `<input name="cur" type="number" inputmode="numeric" min="0" value="${b.cur||''}">`),
+    onSubmit: fd => {
+      b.cur = +fd.get('cur') || 0;
+      if (b.pages && b.cur >= b.pages){ b.status = 'lido'; b.done = today(); b.cur = b.pages; toast('📚 Livro concluído!'); }
+      save();
+    },
+    onMount: f => { const i = f.elements.namedItem('cur'); i.focus(); i.select(); } });
+}
+
+/* ---------- corpo e resultados ---------- */
+function bodyForm(b){
+  const isNew = !b; b = b || {date:ui.tab==='hoje'?C().cursor:today(), weight:'', fat:'', waist:'', notes:'', photos:[]};
+  const prev = db.body.filter(x => x !== b && num(x.weight)).sort(byDateAsc).pop();
+  openSheet({ title: isNew?'Peso e fotos':'Registro corporal',
+    html: `<div class="ptitle">⚖️ ${isNew?'Como está o corpo?':cap(fmtLong(b.date))}</div>`
+      + prop('📅','Data', `<input type="date" name="date" required value="${b.date}">`)
+      + prop('⚖️','Peso (kg)', `<input name="weight" inputmode="decimal" value="${esc(b.weight)}" placeholder="${prev?'último: '+dec(num(prev.weight)):'ex.: 82,4'}">`)
+      + prop('📉','% gordura', `<input name="fat" inputmode="decimal" value="${esc(b.fat)}" placeholder="opcional">`)
+      + prop('📏','Cintura (cm)', `<input name="waist" inputmode="decimal" value="${esc(b.waist)}" placeholder="opcional">`)
+      + `<div id="bPrev" class="time" style="padding:2px 0 0"></div>`
+      + photoField(b.photos||[])
+      + `<div class="pbody"><textarea name="notes" placeholder="Observações: dieta, sono, como se sente…">${esc(b.notes)}</textarea></div>`,
+    onMount: f => {
+      const upd = () => { const w = num(f.elements.namedItem('weight').value), p = $('#bPrev'); if (p) p.textContent = w && prev ? `${signKg(w - num(prev.weight))} em relação a ${fmtShort(prev.date)}` : ''; };
+      f.addEventListener('input', upd); upd();
+      if (isNew) f.elements.namedItem('weight').focus();
+    },
+    onSubmit: fd => {
+      const o = {date:fd.get('date'), weight:fd.get('weight').trim(), fat:fd.get('fat').trim(), waist:fd.get('waist').trim(), notes:fd.get('notes'), photos:readPhotos(fd)};
+      if (!num(o.weight) && !o.photos.length) { alert('Informe o peso ou adicione pelo menos uma foto.'); return false; }
+      if (isNew) db.body.push({id:uid(), ts:Date.now(), ...o}); else Object.assign(b, o);
+      save({enter:true}); if (isNew) toast(num(o.weight) ? `⚖️ ${kg(o.weight)} registrado` : '📷 Fotos salvas');
+    },
+    onDelete: isNew ? null : () => { db.body = db.body.filter(x => x.id !== b.id); save(); } });
+}
+function resultForm(r){
+  const isNew = !r; r = r || {type:ui.wFilter!=='todos'?ui.wFilter:'hyrox', date:ui.tab==='hoje'?C().cursor:today(), title:'', result:'', pr:false, notes:'', photos:[]};
+  openSheet({ title: isNew?'Novo resultado':'Resultado',
+    html: `<div style="padding:8px 0 4px">${opts('type', Object.entries(WT).map(([k,t]) => [k, `${t.i} ${t.l}`, t.t]), r.type)}</div>`
+      + `<input class="ptitle" name="title" required value="${esc(r.title)}" placeholder="Ex.: Simulado Hyrox">`
+      + prop('🏁','Resultado', `<input name="result" value="${esc(r.result)}" placeholder="1:12:30 · 100 kg · 🥇 Ouro">`)
+      + prop('📅','Data', `<input type="date" name="date" required value="${r.date}">`)
+      + prop('🏅','Recorde pessoal', `<label class="row" style="min-height:0;padding:6px 8px;gap:8px"><input type="checkbox" name="pr" ${r.pr?'checked':''} style="width:auto"> Sim, é meu melhor</label>`)
+      + photoField(r.photos||[])
+      + `<div class="pbody"><textarea name="notes" placeholder="Detalhes: estações, parciais, adversários, o que melhorar…">${esc(r.notes)}</textarea></div>`,
+    onSubmit: fd => {
+      const o = {type:fd.get('type'), title:fd.get('title').trim(), result:fd.get('result').trim(), date:fd.get('date'), pr:!!fd.get('pr'), notes:fd.get('notes'), photos:readPhotos(fd)};
+      if (!o.title) return false;
+      if (isNew) db.results.push({id:uid(), ts:Date.now(), ...o}); else Object.assign(r, o);
+      save({enter:true}); if (isNew) toast(o.pr ? '🏅 Novo recorde pessoal!' : '🏆 Resultado salvo');
+    },
+    onDelete: isNew ? null : () => { db.results = db.results.filter(x => x.id !== r.id); save(); } });
+}
+
+/* ---------- uber ---------- */
+function uberForm(e){
+  const isNew = !e, s = db.settings;
+  e = e || {date: ui.tab==='uber' && ui.cal.uber.mode==='dia' ? ui.cal.uber.cursor : (ui.tab==='hoje' ? C().cursor : today()), gain:'', km:'', hours:'', trips:'', other:'', kml:s.kmL, fuel:s.fuel, notes:''};
+  openSheet({ title: isNew?'Dia de Uber':'Registro Uber',
+    html: `<div class="ptitle">🚗 ${isNew?'Como foi o dia?':cap(fmtLong(e.date))}</div>`
+      + prop('📅','Data', `<input type="date" name="date" required value="${e.date}">`)
+      + prop('💰','Ganhos (R$)', `<input name="gain" inputmode="decimal" required value="${esc(e.gain)}" placeholder="0,00">`)
+      + prop('📏','Km rodados', `<input name="km" inputmode="decimal" required value="${esc(e.km)}" placeholder="0">`)
+      + prop('⛽','Consumo (km/l)', `<input name="kml" inputmode="decimal" value="${esc(e.kml)}" placeholder="ex.: 12,5">`)
+      + prop('🏷️','Gasolina (R$/L)', `<input name="fuel" inputmode="decimal" value="${esc(e.fuel)}" placeholder="ex.: 6,19">`)
+      + prop('🧾','Outros gastos', `<input name="other" inputmode="decimal" value="${esc(e.other)}" placeholder="pedágio, lanche…">`)
+      + prop('⏱️','Horas online', `<input name="hours" value="${esc(e.hours)}" placeholder="ex.: 6:30">`)
+      + prop('🧍','Corridas', `<input name="trips" type="number" inputmode="numeric" min="0" value="${esc(e.trips)}" placeholder="opcional">`)
+      + `<div id="uPrev" class="prev"></div>`
+      + `<div class="pbody"><textarea name="notes" placeholder="Observações do dia…">${esc(e.notes)}</textarea></div>`,
+    onMount: f => {
+      const upd = () => { const c = uCalc(Object.fromEntries(new FormData(f).entries())); const p = $('#uPrev'); if (!p) return;
+        p.innerHTML = c.ganho || c.km ? `⛽ ${dec(c.litros)} L = <b>${brl(c.comb)}</b> de gasolina<br>💵 Lucro estimado: <b style="color:${c.lucro<0?'var(--red-fg)':'var(--green-fg)'}">${brl(c.lucro)}</b>` : '<span class="muted">Preencha ganhos e km para ver o lucro.</span>'; };
+      f.addEventListener('input', upd); upd();
+      if (isNew) f.elements.namedItem('gain').focus();
+    },
+    onSubmit: fd => {
+      const o = Object.fromEntries(['date','gain','km','kml','fuel','other','hours','trips','notes'].map(k => [k, String(fd.get(k)||'').trim()]));
+      if (o.kml) db.settings.kmL = o.kml;
+      if (o.fuel) db.settings.fuel = o.fuel;
+      if (isNew) db.uber.push({id:uid(), ts:Date.now(), ...o}); else Object.assign(e, o);
+      save({enter:true}); if (isNew) toast(`🚗 Lucro do dia: ${brl(uCalc(o).lucro)}`);
+    },
+    onDelete: isNew ? null : () => { db.uber = db.uber.filter(x => x.id !== e.id); save(); } });
+}
+function uberCfgForm(){
+  const s = db.settings;
+  openSheet({ title:'Carro e combustível',
+    html: `<p class="muted" style="font-size:14px">Usado para estimar quanto você gastou de gasolina em cada dia. Dá para mudar em cada registro também.</p>`
+      + prop('⛽','Consumo (km/l)', `<input name="kml" inputmode="decimal" required value="${esc(s.kmL)}" placeholder="ex.: 12,5">`)
+      + prop('🏷️','Gasolina (R$/L)', `<input name="fuel" inputmode="decimal" required value="${esc(s.fuel)}" placeholder="ex.: 6,19">`),
+    onSubmit: fd => {
+      const k = fd.get('kml').trim(), f = fd.get('fuel').trim();
+      if (!num(k) || !num(f)) { alert('Preencha os dois valores com números.'); return false; }
+      s.kmL = k; s.fuel = f; save({enter:true});
+    } });
+}
+
+/* ---------- lembretes (via calendário do celular) ---------- */
+function reminderForm(r){
+  const isNew = !r; r = r || {title:'', msg:'', days:[parse(today()).getDay()], time:'07:30', on:true};
+  openSheet({ title: isNew?'Novo lembrete':'Lembrete',
+    html: `<input class="ptitle" name="title" required value="${esc(r.title)}" placeholder="Ex.: Hoje é dia de jiu 🥋">`
+      + prop('💬','Mensagem', `<textarea name="msg" rows="2" placeholder="Ex.: Coloque o kimono no carro">${esc(r.msg)}</textarea>`)
+      + prop('🔁','Dias', opts('days', [1,2,3,4,5,6,0].map(d => [d, WD[d]]), r.days, '', 'checkbox'))
+      + prop('⏰','Horário', `<input type="time" name="time" required value="${r.time}">`),
+    onSubmit: fd => {
+      const o = {title:fd.get('title').trim(), msg:fd.get('msg').trim(), days:fd.getAll('days').map(Number), time:fd.get('time'), on:true};
+      if (!o.title || !o.days.length) { alert('Dê um título e escolha pelo menos um dia.'); return false; }
+      let rr = r;
+      if (isNew) { rr = {id:uid(), ...o}; db.reminders.push(rr); } else Object.assign(r, o);
+      persist(); render();
+      setTimeout(() => calendarSheet(rr), 380);
+    },
+    onDelete: isNew ? null : () => { db.reminders = db.reminders.filter(x => x.id !== r.id); save(); } });
+}
+const BYDAY = ['SU','MO','TU','WE','TH','FR','SA'];
+function nextStart(r){
+  const [hh, mm] = r.time.split(':').map(Number), now = new Date();
+  for (let i = 0; i < 8; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i, hh, mm);
+    if (r.days.includes(d.getDay()) && d > now) return d;
+  }
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, hh, mm);
+}
+const icsDate = d => `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
+const icsEsc = s => String(s||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');
+function buildICS(r){
+  const st = nextStart(r), en = new Date(st.getTime() + 15*60000), now = new Date();
+  const stamp = `${now.getUTCFullYear()}${pad(now.getUTCMonth()+1)}${pad(now.getUTCDate())}T${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}00Z`;
+  return ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Segundo Cerebro//PT-BR','CALSCALE:GREGORIAN','METHOD:PUBLISH','BEGIN:VEVENT',
+    `UID:${r.id}@segundo-cerebro`, `DTSTAMP:${stamp}`, `DTSTART:${icsDate(st)}`, `DTEND:${icsDate(en)}`,
+    `RRULE:FREQ=WEEKLY;BYDAY=${r.days.map(d => BYDAY[d]).join(',')}`, `SUMMARY:${icsEsc(r.title)}`, `DESCRIPTION:${icsEsc(r.msg)}`,
+    'BEGIN:VALARM','ACTION:DISPLAY',`DESCRIPTION:${icsEsc(r.title)}`,'TRIGGER:PT0M','END:VALARM','END:VEVENT','END:VCALENDAR'].join('\r\n');
+}
+function calendarSheet(r){
+  openSheet({ title:'Ativar notificação', save:null,
+    html: `<div class="callout blue" style="margin-top:4px"><span class="ci">⏰</span><div><b>${esc(r.title)}</b><br><span class="muted">${r.days.slice().sort().map(d => WDL[d]).join(', ')} às ${r.time}${r.msg?` · ${esc(r.msg)}`:''}</span></div></div>
+      <p style="font-size:15px">Quem vai te avisar é o <b>calendário do celular</b>. Assim a notificação chega mesmo com o app fechado. É só fazer isso uma vez, porque o evento se repete toda semana.</p>
+      <button type="button" class="btn block" data-act="icsOpen" data-id="${r.id}">📅 Adicionar ao Calendário do celular</button>
+      <button type="button" class="btn ghost block" data-act="gcal" data-id="${r.id}">Abrir no Google Agenda</button>
+      <p class="time" style="margin-top:12px">iPhone: na tela que abrir, toque em "Adicionar Tudo". Google Agenda: confira se a notificação está "no horário do evento".</p>` });
+}
+function openICS(r){
+  const ics = buildICS(r), file = new File([ics], `${r.title.replace(/[^\p{L}\d]+/gu,'-').replace(/^-|-$/g,'').slice(0,40) || 'lembrete'}.ics`, {type:'text/calendar'});
+  const url = URL.createObjectURL(file);
+  if (/iphone|ipad|ipod/i.test(navigator.userAgent)) { location.href = url; }
+  else { const a = document.createElement('a'); a.href = url; a.download = file.name; document.body.appendChild(a); a.click(); a.remove(); }
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+}
+function openGcal(r){
+  const st = nextStart(r), en = new Date(st.getTime() + 15*60000), tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const u = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(r.title)}&details=${encodeURIComponent(r.msg||'')}`
+    + `&dates=${icsDate(st)}/${icsDate(en)}&ctz=${encodeURIComponent(tz)}&recur=${encodeURIComponent('RRULE:FREQ=WEEKLY;BYDAY=' + r.days.map(d => BYDAY[d]).join(','))}`;
+  window.open(u, '_blank');
+}
+
+function addMenu(){
+  const items = [['task','✅','Tarefa','Algo para fazer'],['workout','🥋','Treino','Jiu, Hyrox, academia, corrida'],['body','⚖️','Peso e fotos','Peso, medidas, fotos de evolução'],['result','🏆','Resultado','Tempos, cargas, campeonatos'],['content','🎬','Conteúdo','Ideia, roteiro ou áudio'],['uber','🚗','Dia de Uber','Ganhos, km e gasolina'],
+    ['journal','📔','Diário','Como você está se sentindo'],['note','💡','Nota','Pensamentos e ideias'],['book','📚','Livro','Lendo, quero ler, lido'],['reminder','⏰','Lembrete','Notificação semanal']];
+  openSheet({ title:'Novo', save:null,
+    html: `<div class="menu">${items.map(([k,i,l,s]) => `<button type="button" class="row tap" style="width:100%;text-align:left" data-act="new" data-v="${k}"><span class="mi">${i}</span><div><b>${l}</b><small>${s}</small></div></button>`).join('')}</div>` });
+}
+
+/* ================= backup ================= */
+let backupFile = null;
+async function doBackup(){
+  const data = {...db, settings:{...db.settings, pinHash:undefined}}, ids = allPhotoIds(), photos = {};
+  if (ids.length) toast(`💾 Preparando backup com ${ids.length} foto${ids.length>1?'s':''}…`);
+  for (const id of ids) { try { const b = await idb.get(id); if (b) photos[id] = await blobToDataURL(b); } catch(e){} }
+  const json = JSON.stringify({app:'segundo-cerebro', version:3, exportedAt:new Date().toISOString(), data, photos});
+  backupFile = new File([json], `segundo-cerebro-backup-${today()}.json`, {type:'application/json'});
+  shareBackup();
+}
+async function shareBackup(){
+  const file = backupFile; if (!file) return;
+  try {
+    if (navigator.canShare && navigator.canShare({files:[file]})) await navigator.share({files:[file], title:'Backup Segundo Cérebro'});
+    else { const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
+    closeSheet(); db.settings.lastBackup = Date.now(); save(); toast('💾 Backup feito');
+  } catch(e) {
+    if (e.name === 'NotAllowedError') {
+      // o iPhone exige um toque logo antes de abrir o compartilhar; preparar as fotos demora, então pedimos mais um toque
+      openSheet({ title:'Backup pronto', save:null, html:`<p>Arquivo pronto (${(file.size/1048576).toFixed(1).replace('.',',')} MB). Toque para salvar no Drive:</p><button type="button" class="btn block" data-act="shareBackup">💾 Salvar backup</button>` });
+    } else if (e.name !== 'AbortError') toast('Não foi possível gerar o backup');
+  }
+}
+function doImport(file){
+  const r = new FileReader();
+  r.onload = async () => {
+    try {
+      const j = JSON.parse(r.result), d = j.data || j;
+      if (!Array.isArray(d.tasks) || !Array.isArray(d.workouts)) throw 0;
+      if (!confirm('Restaurar este backup? Os dados atuais deste celular serão substituídos.')) return;
+      if (j.photos) { toast('📷 Restaurando fotos…'); for (const [id, url] of Object.entries(j.photos)) { try { await idb.put(id, await (await fetch(url)).blob()); } catch(e){} } }
+      const keep = {pinHash:db.settings.pinHash, pinLen:db.settings.pinLen};
+      db = {...defaults(), ...d, settings:{...defaults().settings, ...(d.settings||{}), ...keep, lastBackup:Date.now(), seeded:true}};
+      save({enter:true}); toast('✅ Backup restaurado');
+    } catch(e) { alert('Esse arquivo não parece ser um backup válido do Segundo Cérebro.'); }
+  };
+  r.readAsText(file);
+}
+
+/* ================= PIN ================= */
+async function hash(pin){ const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('sc2:'+pin)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2,'0')).join(''); }
+let entry = '';
+function showLock(){
+  if (!db.settings.pinHash) return;
+  entry = ''; drawDots(); $('#lkMsg').textContent = 'Digite seu PIN';
+  $('#lock').classList.remove('hidden','unlock'); closeSheet();
+}
+function drawDots(){ $('#lkDots').innerHTML = [...Array(db.settings.pinLen||4)].map((_,i) => `<i class="${i<entry.length?'f':''}"></i>`).join(''); }
+$('#lkPad').innerHTML = ['1','2','3','4','5','6','7','8','9','','0','⌫'].map(k => k ? `<button class="${k==='⌫'?'x':''}" data-k="${k}">${k}</button>` : '<span></span>').join('');
+$('#lkPad').addEventListener('click', async e => {
+  const k = e.target.closest('button')?.dataset.k; if (!k) return;
+  buzz();
+  const len = db.settings.pinLen || 4;
+  if (k === '⌫') entry = entry.slice(0, -1); else if (entry.length < len) entry += k;
+  drawDots();
+  if (entry.length === len){
+    if (await hash(entry) === db.settings.pinHash){ const l = $('#lock'); l.classList.add('unlock'); setTimeout(() => l.classList.add('hidden'), 450); entry = ''; render({enter:true}); }
+    else { const d = $('#lkDots'); d.classList.add('err'); navigator.vibrate && navigator.vibrate([30,40,30]); $('#lkMsg').textContent = 'PIN incorreto'; setTimeout(() => { d.classList.remove('err'); entry=''; drawDots(); }, 450); }
+  }
+});
+let hiddenAt = 0;
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) hiddenAt = Date.now();
+  else if (hiddenAt && Date.now() - hiddenAt > 60000) showLock();
+});
+function pinForm(){
+  openSheet({ title:'PIN de bloqueio',
+    html: `<p class="muted" style="font-size:14px">Use de 4 a 6 números. Se esquecer, só dá para recuperar apagando os dados e restaurando um backup.</p>`
+      + prop('🔒','Novo PIN', `<input name="p1" type="password" inputmode="numeric" pattern="\\d{4,6}" maxlength="6" required>`)
+      + prop('🔒','Repita', `<input name="p2" type="password" inputmode="numeric" pattern="\\d{4,6}" maxlength="6" required>`),
+    onSubmit: fd => {
+      const p1 = fd.get('p1'), p2 = fd.get('p2');
+      if (!/^\d{4,6}$/.test(p1)) { alert('O PIN deve ter de 4 a 6 números.'); return false; }
+      if (p1 !== p2) { alert('Os PINs não são iguais.'); return false; }
+      hash(p1).then(h => { db.settings.pinHash = h; db.settings.pinLen = p1.length; save(); toast('🔒 PIN ativado'); });
+    } });
+}
+
+/* ================= eventos ================= */
+function step(dir){
+  const c = C();
+  if (c.mode === 'dia') c.cursor = addDays(c.cursor, dir);
+  else if (c.mode === 'semana') c.cursor = addDays(c.cursor, 7*dir);
+  else { const d = parse(c.cursor); c.cursor = ymd(new Date(d.getFullYear(), d.getMonth()+dir, 1)); }
+  buzz(); render({slide: dir > 0 ? 'l' : 'r'});
+}
+const find = (arr, id) => db[arr].find(x => x.id === id);
+
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const { act, v, id } = el.dataset;
+  switch (act){
+    case 'tab': if (ui.tab !== v) { ui.tab = v; ui.q = ''; scrollTo(0,0); render({enter:true}); buzz(); } break;
+    case 'mode': if (C().mode !== v) { C().mode = v; buzz(); render({enter:true}); } break;
+    case 'prev': step(-1); break;
+    case 'next': step(1); break;
+    case 'goToday': { const c = C(), dir = c.cursor > today() ? -1 : 1; c.cursor = today(); render({slide: dir > 0 ? 'l' : 'r'}); break; }
+    case 'goDay': ui.cal.hoje.cursor = el.dataset.d; ui.cal.hoje.mode = 'dia'; ui.tab = 'hoje'; scrollTo(0,0); render({enter:true}); break;
+    case 'uberDay': ui.cal.uber.cursor = el.dataset.d; ui.cal.uber.mode = 'dia'; scrollTo(0,0); render({enter:true}); break;
+    case 'toggleTask': { const t = find('tasks', id); t.done = !t.done; ui.pop = t.id; buzz(); save(); break; }
+    case 'moveToday': find('tasks', id).date = today(); save(); toast('📅 Movida para hoje'); break;
+    case 'editTask': taskForm(find('tasks', id)); break;
+    case 'editWorkout': workoutForm(find('workouts', id)); break;
+    case 'editJournal': journalForm(find('journal', id)); break;
+    case 'editNote': noteForm(find('notes', id)); break;
+    case 'editBook': bookForm(find('books', id)); break;
+    case 'editUber': uberForm(find('uber', id)); break;
+    case 'editBody': bodyForm(find('body', id)); break;
+    case 'editResult': resultForm(find('results', id)); break;
+    case 'trSeg': if (ui.trSeg !== v) { ui.trSeg = v; buzz(); render({enter:true}); } break;
+    case 'bodyRange': ui.bodyRange = v; render(); break;
+    case 'viewPhoto': { const box = el.dataset.ids ? el : el.closest('[data-ids]'); openLightbox(box.dataset.ids.split(','), +el.dataset.i || 0, el); break; }
+    case 'rmPhoto': el.closest('.ph-t').remove(); syncPhotoField(); buzz(); break;
+    case 'shareBackup': shareBackup(); break;
+    case 'ctSeg': if (ui.ctSeg !== v) { ui.ctSeg = v; buzz(); render({enter:true}); } break;
+    case 'editContent': contentForm(find('content', id)); break;
+    case 'nextStatus': { const c = find('content', id), nx = ST_ORDER[ST_ORDER.indexOf(c.status) + 1]; if (!nx) break;
+      c.status = nx; c.upd = Date.now(); if (nx === 'postado') c.posted = today(); db.contentLog[today()] = 1; buzz(); save();
+      toast(nx === 'postado' ? '✅ Conteúdo postado!' : `${ST[nx].i} Movido para ${ST[nx].l}`); break; }
+    case 'recAudio':
+      startRec(el, a => {
+        db.contentLog[today()] = 1; persist();
+        if (el.dataset.target === 'cmp') { pendingAudios.push(a); const box = $('#cmpAud'); if (box) box.insertAdjacentHTML('beforeend', audioRow(a, 'cmp')); }
+        else { const box = $('#audField'); if (box) { box.insertAdjacentHTML('beforeend', audioRow(a, 'form')); syncAudField(); } }
+      });
+      break;
+    case 'playAudio': playAudio(id, el); break;
+    case 'rmAudio':
+      if (player && player.id === id) { player.audio.pause(); player = null; }
+      el.closest('.aud').remove();
+      if (el.dataset.scope === 'cmp') pendingAudios = pendingAudios.filter(a => a.id !== id); else syncAudField();
+      break;
+    case 'editReminder': reminderForm(find('reminders', id)); break;
+    case 'bookPage': pageForm(find('books', id)); break;
+    case 'findCover': findCover(); break;
+    case 'pickCover': pickCover(+el.dataset.i); break;
+    case 'calendar': calendarSheet(find('reminders', id)); break;
+    case 'icsOpen': openICS(find('reminders', id)); break;
+    case 'gcal': openGcal(find('reminders', id)); break;
+    case 'uberCfg': uberCfgForm(); break;
+    case 'addMenu':
+      buzz();
+      if (ui.tab==='treinos') ({treinos:workoutForm, corpo:bodyForm, resultados:resultForm})[ui.trSeg](); else if (ui.tab==='livros') bookForm(); else if (ui.tab==='uber') uberForm(); else if (ui.tab==='conteudo') contentForm();
+      else if (ui.tab==='notas') (ui.notesSeg==='diario' ? journalForm() : noteForm()); else addMenu();
+      break;
+    case 'new': ({task:taskForm, workout:workoutForm, journal:journalForm, note:noteForm, book:bookForm, uber:uberForm, reminder:reminderForm, body:bodyForm, result:resultForm, content:contentForm})[v](); break;
+    case 'wFilter': ui.wFilter = v; render({enter:true}); break;
+    case 'notesSeg': if (ui.notesSeg !== v) { ui.notesSeg = v; render({enter:true}); } break;
+    case 'booksSeg': if (ui.booksSeg !== v) { ui.booksSeg = v; render({enter:true}); } break;
+    case 'closeSheet': closeSheet(); break;
+    case 'sheetDelete': if (confirm('Excluir este item?')) { sheetOnDelete(); closeSheet(); } break;
+    case 'backup': doBackup(); break;
+    case 'import': $('#importFile').click(); break;
+    case 'setPin': pinForm(); break;
+    case 'removePin': if (confirm('Remover o PIN de bloqueio?')) { db.settings.pinHash = null; save(); } break;
+    case 'wipe':
+      if (confirm('Apagar TODOS os dados deste celular? Isso não pode ser desfeito.') && confirm('Tem certeza mesmo? Recomendo fazer um backup antes.')) { db = defaults(); db.settings.seeded = true; save({enter:true}); }
+      break;
+  }
+});
+document.addEventListener('submit', e => {
+  if (e.target.dataset.form !== 'idea') return;
+  e.preventDefault();
+  const text = e.target.elements.namedItem('idea').value.trim();
+  if (!text && !pendingAudios.length) return;
+  const [first, ...rest] = text.split('\n');
+  db.content.push({id:uid(), ts:Date.now(), upd:Date.now(), title: first.slice(0, 90) || 'Ideia em áudio 🎤', idea: first.length > 90 ? text : rest.join('\n').trim(),
+    status:'ideia', platforms:[], pubDate:'', hook:'', script:'', caption:'', audios:pendingAudios, posted:''});
+  pendingAudios = []; db.contentLog[today()] = 1; buzz(); save(); toast('💡 Ideia guardada');
+});
+document.addEventListener('submit', e => {
+  if (e.target.dataset.form !== 'quickTask') return;
+  e.preventDefault();
+  const title = e.target.elements.namedItem('title').value.trim(); if (!title) return;
+  db.tasks.push({id:uid(), ts:Date.now(), title, date:C().cursor, done:false, important:false, notes:''});
+  save(); const i = document.querySelector('[data-form=quickTask] input'); i && i.focus();
+});
+document.addEventListener('input', e => { if (e.target.id === 'search') { ui.q = e.target.value; $('#notesList').innerHTML = notesList(); } });
+document.addEventListener('change', async e => {
+  if (e.target.id !== 'phInput') return;
+  const files = [...e.target.files]; e.target.value = ''; if (!files.length) return;
+  toast(files.length > 1 ? `📷 Processando ${files.length} fotos…` : '📷 Processando foto…');
+  const field = $('#phField'); if (!field) return;
+  const add = field.querySelector('.ph-add');
+  for (const f of files) {
+    try { const blob = await compress(f), id = 'p' + uid(); await idb.put(id, blob); add.insertAdjacentHTML('beforebegin', phEdit(id)); }
+    catch(err) { toast('Não consegui abrir essa foto'); }
+  }
+  syncPhotoField(); hydratePhotos(field); buzz();
+});
+document.addEventListener('change', e => { if (e.target.id === 'importFile' && e.target.files[0]) { doImport(e.target.files[0]); e.target.value = ''; } });
+
+/* título compacto ao rolar */
+const tb = $('#topbar');
+addEventListener('scroll', () => tb.classList.toggle('solid', scrollY > 60), {passive:true});
+
+/* carrossel: arrastar com o dedo (segue o dedo, como no iOS) */
+let drag = null;
+const view = $('#view');
+view.addEventListener('touchstart', e => {
+  const car = e.target.closest('#carousel'); if (!car || $('#ov')) return;
+  drag = {x:e.touches[0].clientX, y:e.touches[0].clientY, dx:0, on:false, car, t:Date.now()};
+}, {passive:true});
+view.addEventListener('touchmove', e => {
+  if (!drag) return;
+  const dx = e.touches[0].clientX - drag.x, dy = e.touches[0].clientY - drag.y;
+  if (!drag.on) {
+    if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.2) { drag.on = true; drag.car.style.transition = 'none'; drag.car.style.animation = 'none'; }
+    else if (Math.abs(dy) > 10) { drag = null; return; } else return;
+  }
+  drag.dx = dx; drag.car.style.transform = `translateX(${dx}px)`; drag.car.style.opacity = 1 - Math.min(.5, Math.abs(dx) / 700);
+}, {passive:true});
+view.addEventListener('touchend', () => {
+  if (!drag) return; const d = drag; drag = null; if (!d.on) return;
+  const vel = Math.abs(d.dx) / Math.max(1, Date.now() - d.t), car = d.car;
+  car.style.transition = 'transform .25s var(--ios), opacity .25s';
+  if (Math.abs(d.dx) > 80 || (vel > .5 && Math.abs(d.dx) > 30)) {
+    const dir = d.dx < 0 ? 1 : -1;
+    car.style.transform = `translateX(${-dir * innerWidth * .6}px)`; car.style.opacity = '0';
+    setTimeout(() => step(dir), 170);
+  } else { car.style.transform = ''; car.style.opacity = ''; }
+}, {passive:true});
+
+/* relógio da contagem regressiva */
+setInterval(() => { const el = document.getElementById('cdClock'); if (el) el.textContent = cdClock(); }, 1000);
+
+/* virar o dia com o app aberto */
+let lastDay = today();
+setInterval(() => { if (today() !== lastDay) { for (const k in ui.cal) if (ui.cal[k].cursor === lastDay) ui.cal[k].cursor = today(); lastDay = today(); render(); } }, 60000);
+
+/* primeiro uso: já deixa o lembrete do jiu pronto */
+if (!db.settings.seeded) {
+  db.reminders.push({id:uid(), title:'Hoje é dia de jiu 🥋', msg:'Coloque o kimono no carro. Treino às 19h.', days:[1], time:'07:30', on:true});
+  db.settings.seeded = true; persist();
+}
+
+render({enter:true});
+showLock();
+gcPhotos();
+if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js');
+</script>
+</body>
+</html>
