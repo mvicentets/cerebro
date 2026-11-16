@@ -15,7 +15,7 @@ const freshState = () => ({hashes:{}, media:{}, lastPull:null, lastSync:null});
 let session = loadJSON(SESS);
 let sstate = loadJSON(SKEY) || freshState();
 let syncStatus = session ? 'ok' : 'off', syncErr = '';
-let loginEmail = '', codeSent = false, refreshing = null;
+let loginEmail = '', refreshing = null;
 
 const saveSession = () => { if (session) localStorage.setItem(SESS, JSON.stringify(session)); else localStorage.removeItem(SESS); };
 const saveState = () => localStorage.setItem(SKEY, JSON.stringify(sstate));
@@ -30,26 +30,61 @@ function setSession(j){
              user:{id:j.user.id, email:j.user.email}};
   saveSession();
 }
+/* Renovação do login.
+   O Supabase troca o "refresh token" a cada renovação e cada um só pode ser usado uma vez.
+   Com o app aberto em mais de uma aba/janela, todas dividem o mesmo login salvo: por isso
+   (1) sempre relemos o login salvo antes de renovar, (2) só uma aba renova por vez (Web Locks) e
+   (3) uma recusa só desloga se ninguém mais renovou e o servidor disser que o token é inválido. */
+const storedSession = () => loadJSON(SESS);
+function adoptStored(){
+  const s = storedSession();
+  if (s && session && s.user && session.user && s.user.id === session.user.id && s.refresh_token !== session.refresh_token && s.expires_at >= session.expires_at) { session = s; return true; }
+  return false;
+}
+const withRefreshLock = fn => (navigator.locks && navigator.locks.request) ? navigator.locks.request('sc2-auth-refresh', fn) : fn();
 async function refreshSession(force){
   if (!session) return;
+  const tokenBefore = session.access_token;
+  if (adoptStored() && Date.now() < session.expires_at - 60000) return;   // outra aba já renovou: usa o login dela
   if (!force && Date.now() < session.expires_at - 60000) return;
   if (refreshing) return refreshing;
-  refreshing = (async () => {
-    try {
-      const r = await fetch(SB_URL + '/auth/v1/token?grant_type=refresh_token', {method:'POST', headers:jsonHeaders(), body:JSON.stringify({refresh_token:session.refresh_token})});
-      if (r.ok) setSession(await r.json());
-      else if (r.status === 400 || r.status === 401) { session = null; saveSession(); setSyncStatus('off'); toast('Sua sessão expirou. Entre de novo em Ajustes.'); }
-    } catch(e) { /* sem internet: tenta depois */ }
-  })().finally(() => { refreshing = null; });
+  refreshing = withRefreshLock(async () => {
+    if (!session) return;
+    adoptStored();                                                    // outra aba pode ter renovado enquanto esperávamos
+    if (session.access_token !== tokenBefore && Date.now() < session.expires_at - 60000) return;
+    if (!force && Date.now() < session.expires_at - 60000) return;
+    const used = session.refresh_token;
+    let r;
+    try { r = await fetch(SB_URL + '/auth/v1/token?grant_type=refresh_token', {method:'POST', headers:jsonHeaders(), body:JSON.stringify({refresh_token:used})}); }
+    catch(e) { return; }                                              // sem internet: tenta depois, continua logado
+    if (r.ok) { setSession(await r.json()); return; }
+    if (adoptStored()) return;                                        // outra aba renovou primeiro: usa o login dela
+    if (r.status >= 500 || r.status === 429) return;                  // problema temporário do servidor: não desloga
+    const msg = (await sbErr(r)).toLowerCase();
+    if (r.status === 400 || r.status === 401 || /refresh token|invalid|not found|revoked|already used/.test(msg)) {
+      const email = session.user && session.user.email;
+      session = null; saveSession(); setSyncStatus('off');
+      if (email) loginEmail = email;
+      toast('Sua sessão expirou. Entre de novo em ⚙️ Ajustes (seus dados continuam aqui).');
+      render();
+    }
+  }).finally(() => { refreshing = null; });
   return refreshing;
 }
 async function sbFetch(path, opts = {}, retry = true){
   await refreshSession(false);
   if (!session) throw new Error('sem sessão');
   const r = await fetch(SB_URL + path, {...opts, headers:{apikey:SB_KEY, Authorization:'Bearer ' + session.access_token, ...(opts.headers || {})}});
-  if (r.status === 401 && retry) { await refreshSession(true); return sbFetch(path, opts, false); }
+  if (r.status === 401 && retry) { if (!adoptStored()) await refreshSession(true); return sbFetch(path, opts, false); }
   return r;
 }
+// outra aba renovou, entrou ou saiu: acompanha
+addEventListener('storage', e => {
+  if (e.key !== SESS) return;
+  const s = storedSession();
+  if (s && (!session || s.refresh_token !== session.refresh_token)) { const was = !!session; session = s; if (!was) { setSyncStatus('ok'); render(); syncNow(); } }
+  else if (!s && session) { session = null; setSyncStatus('off'); render(); }
+});
 async function signIn(email, password, create){
   const path = create ? '/auth/v1/signup' : '/auth/v1/token?grant_type=password';
   const r = await fetch(SB_URL + path, {method:'POST', headers:jsonHeaders(), body:JSON.stringify({email, password})});
@@ -57,7 +92,8 @@ async function signIn(email, password, create){
   const j = await r.json();
   if (!j.access_token) throw new Error('CONFIRMAR');   // conta criada: falta confirmar pelo link do e-mail
   setSession(j);
-  sstate = freshState(); saveState();   // primeira sincronização deste aparelho: junta o que tem aqui com o que tem na nuvem
+  // mesma conta de antes neste aparelho: continua de onde parou; conta nova/primeira vez: junta o que tem aqui com a nuvem
+  if (sstate.uid !== j.user.id) { sstate = freshState(); sstate.uid = j.user.id; saveState(); }
 }
 function syncLogoutLocal(){ session = null; saveSession(); sstate = freshState(); saveState(); setSyncStatus('off'); }
 
@@ -233,7 +269,7 @@ document.addEventListener('click', async e => {
     const r = await fetch(SB_URL + '/auth/v1/user', {headers:{apikey:SB_KEY, Authorization:'Bearer ' + h.get('access_token')}});
     if (!r.ok) return;
     setSession({access_token:h.get('access_token'), refresh_token:h.get('refresh_token'), expires_in:+h.get('expires_in') || 3600, user:await r.json()});
-    sstate = freshState(); saveState();
+    if (sstate.uid !== session.user.id) { sstate = freshState(); sstate.uid = session.user.id; saveState(); }
     toast('✅ E-mail confirmado! Conectado'); render(); await syncNow(); render();
   } catch(e) {}
 })();
